@@ -278,6 +278,23 @@ class PreferencesWindowController: NSWindowController, NSWindowDelegate {
 
     override func showWindow(_ sender: Any?) {
         super.showWindow(sender)
+
+        // Position window below the status bar item
+        if let window = self.window,
+           let appDelegate = NSApp.delegate as? AppDelegate,
+           let button = appDelegate.statusBarItem.button,
+           let buttonWindow = button.window {
+            let buttonRect = button.convert(button.bounds, to: nil)
+            let screenRect = buttonWindow.convertToScreen(buttonRect)
+
+            // Position window so its top-right aligns with status bar button
+            let windowFrame = window.frame
+            let newX = screenRect.midX - (windowFrame.width / 2)
+            let newY = screenRect.minY - windowFrame.height - 5
+
+            window.setFrameOrigin(NSPoint(x: newX, y: newY))
+        }
+
         AppDelegate.bringToFront(window: self.window!)
 
         // Start scanning when preferences window is shown

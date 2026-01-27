@@ -86,11 +86,14 @@ class ViewController: NSViewController {
         deviceNameLabel?.stringValue = ""
         
         currentPositionDimenstionLabel?.stringValue = Preferences.shared.isMetric ? "cm" : "in"
-        
+
+        // Show placeholder until we get real data from the desk
+        currentPositionLabel?.stringValue = "--"
+
         if let position = controller?.desk.position {
             onDeskPositionChange(position)
         }
-        
+
         updateConnectionLabels()
     }
     
@@ -226,15 +229,18 @@ class ViewController: NSViewController {
     
     func reconnect() {
         // print("Reconnect if necessary")
-        
+
         if bluetoothManager.connectedPeripheral == nil {
             bluetoothManager.startScanning()
         }
-        
+
+        // Force a fresh position read from the desk
+        controller?.desk.refreshPosition()
+
         if let position = controller?.desk.position {
             onDeskPositionChange(position)
         }
-        
+
     }
     
     @IBAction func moveUpClicked(_ sender: TouchButton) {

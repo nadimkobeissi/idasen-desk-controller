@@ -698,7 +698,7 @@
                                         <subviews>
                                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hSW-Cu-fSk">
                                                 <rect key="frame" x="-2" y="0.0" width="21" height="31"/>
-                                                <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="0" id="kR5-ne-dXO">
+                                                <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="--" id="kR5-ne-dXO">
                                                     <font key="font" textStyle="largeTitle" name=".SFNS-Regular"/>
                                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -861,9 +861,10 @@
                                         </stackView>
                                         <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="FjW-Es-6vS">
                                             <rect key="frame" x="326" y="9" width="15" height="15"/>
-                                            <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="NSActionTemplate" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="6hs-wE-dph">
+                                            <buttonCell key="cell" type="bevel" bezelStyle="rounded" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="6hs-wE-dph">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="system"/>
+                                                <imageReference key="image" image="gearshape" catalog="system" symbolScale="medium"/>
                                             </buttonCell>
                                             <connections>
                                                 <action selector="showPreferences:" target="XfG-lQ-9wD" id="Tg7-bn-thv"/>

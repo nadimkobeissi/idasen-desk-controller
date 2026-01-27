@@ -48,11 +48,17 @@ class DeskPeripheral: NSObject {
     
     init(peripheral: CBPeripheral) {
         self.peripheral = peripheral
-        
+
         super.init()
-        
+
         peripheral.delegate = self
         peripheral.discoverServices(nil)
+    }
+
+    /// Force a fresh read of the position from the desk
+    func refreshPosition() {
+        guard let characteristic = positionCharacteristic else { return }
+        peripheral.readValue(for: characteristic)
     }
 }
 
@@ -99,17 +105,21 @@ extension DeskPeripheral: CBPeripheralDelegate {
             if characteristic.uuid == DeskPeripheral.deskPositionCharacteristicUUID {
                 // print("Discovered position characteristic: \(characteristic)")
                 positionCharacteristic = characteristic
-                
-                peripheral.readValue(for: characteristic)
-                // Start monitoring the position / speed
+
+                // First enable notifications to ensure we get fresh data
                 peripheral.setNotifyValue(true, for: characteristic)
+
+                // Then request a read after a short delay to allow notification to settle
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    self?.peripheral.readValue(for: characteristic)
+                }
             } else if characteristic.uuid == DeskPeripheral.deskControlCharacteristicUUID {
                 // print("Discovered control characteristic: \(characteristic)")
                 controlCharacteristic = characteristic
             } else {
                 return
             }
-            
+
             print(characteristic.properties)
         }
     }

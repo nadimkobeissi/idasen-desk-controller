@@ -55,10 +55,15 @@ class DeskController: NSObject {
             self.moveIfNeeded()
             self.positionChangeCallbacks.forEach { $0(position) }
         }
-        
+
         DeskController.shared = self
-        
+
         autoStand.update()
+
+        // Force a fresh position read after a short delay to ensure connection is ready
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.desk.refreshPosition()
+        }
         NSWorkspace.shared.notificationCenter.addObserver(
                 self, selector: #selector(onWakeNote(note:)),
                 name: NSWorkspace.didWakeNotification, object: nil)
