@@ -117,14 +117,21 @@ class ViewController: NSViewController {
                 break
             case .poweredOn:
                 statusLabel.stringValue = (bluetoothManager.connectedPeripheral == nil) ? "Not connected" : "Connected"
-                messageLabel?.stringValue = "Searching for your Desk... \n\nIf the desk hasn't connected to this Mac before, make sure to set it into pairing mode. \n\nOtherwise, make sure no other apps are currently connected to it."
-                
-                statusIndicator?.layer?.backgroundColor = (bluetoothManager.connectedPeripheral == nil) ? NSColor.orange.cgColor : NSColor.green.cgColor
-                
+
                 if bluetoothManager.connectedPeripheral == nil {
-                    deviceNameLabel?.stringValue = "Searching for nearby desks"
+                    if Preferences.shared.selectedDeviceUUID != nil {
+                        // Has saved device but not connected yet
+                        deviceNameLabel?.stringValue = "Reconnecting to saved desk..."
+                        messageLabel?.stringValue = "Looking for your saved desk...\n\nIf the desk isn't found, open Preferences to select a different device or clear the selection."
+                    } else {
+                        // No saved device
+                        deviceNameLabel?.stringValue = "No desk selected"
+                        messageLabel?.stringValue = "Open Preferences to select your desk from the list of nearby Bluetooth devices.\n\nMake sure your desk is powered on and in range."
+                    }
                 }
-                
+
+                statusIndicator?.layer?.backgroundColor = (bluetoothManager.connectedPeripheral == nil) ? NSColor.orange.cgColor : NSColor.green.cgColor
+
                 break
             case .resetting:
                 statusLabel.stringValue = "Reconnecting"
@@ -154,25 +161,50 @@ class ViewController: NSViewController {
     func setControllerFor(deskPeripheral: CBPeripheral) {
         // print("Set controller for: \(deskPeripheral)")
         let desk = DeskPeripheral(peripheral: deskPeripheral)
-        
+
+        // Handle validation error (device is not a Linak desk)
+        desk.onValidationError = { [weak self] errorMessage in
+            self?.handleInvalidDevice(errorMessage: errorMessage, peripheral: deskPeripheral)
+        }
+
         controller = DeskController(desk: desk)
         controller?.onPositionChange({ [weak self] deskPosition in
             DispatchQueue.main.async {
                 self?.onDeskPositionChange(deskPosition)
             }
         })
-        
+
         controller?.onCurrentMovingDirectionChange = { [weak self] movingDirection in
             // print("Moving direction changed")
             if movingDirection == .none {
-                
+
                 DispatchQueue.main.async {
                     self?.sitButton?.title = "Move to sit"
                     self?.standButton?.title = "Move to stand"
                 }
             }
         }
-        
+
+    }
+
+    func handleInvalidDevice(errorMessage: String, peripheral: CBPeripheral) {
+        // Disconnect from the invalid device
+        bluetoothManager.centralManager?.cancelPeripheralConnection(peripheral)
+
+        // Clear the saved selection
+        Preferences.shared.selectedDeviceUUID = nil
+        bluetoothManager.connectedPeripheral = nil
+
+        // Show alert
+        let alert = NSAlert()
+        alert.messageText = "Invalid Device"
+        alert.informativeText = errorMessage
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+
+        // Update UI
+        updateConnectionLabels()
     }
     
     func onDeskPositionChange(_ newPosition: Float) {

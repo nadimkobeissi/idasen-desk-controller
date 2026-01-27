@@ -31,8 +31,10 @@ class DeskPeripheral: NSObject {
     var speed: Float = 0
     
     var hasLoadedPositionCharacteristicValues = false
-    
+    var hasValidatedAsDesk = false
+
     var onPositionChange: (Float) -> Void = { _ in }
+    var onValidationError: (String) -> Void = { _ in }
     var position: Float? {
         didSet {
 //            print("\(position)cm")
@@ -58,11 +60,11 @@ extension DeskPeripheral: CBPeripheralDelegate {
     
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        
+
         guard peripheral == self.peripheral, let services = peripheral.services else {
             return
         }
-        
+
         services.forEach { service in
             if service.uuid == DeskPeripheral.deskPositionServiceUUID {
                 positionService = service
@@ -73,8 +75,17 @@ extension DeskPeripheral: CBPeripheralDelegate {
             } else {
                 return
             }
-            
+
             peripheral.discoverCharacteristics(nil, for: service)
+        }
+
+        // Validate that this is actually a Linak desk
+        if positionService == nil && controlService == nil {
+            DispatchQueue.main.async {
+                self.onValidationError("This device is not a compatible Idasen/Linak desk. Please select a different device.")
+            }
+        } else {
+            hasValidatedAsDesk = true
         }
     }
     

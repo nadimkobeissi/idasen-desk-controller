@@ -28,6 +28,7 @@ class Preferences {
     private let isMetricKey = "isMetric"
     
     private let hasLaunched = "hasLaunched"
+    private let selectedDeviceUUIDKey = "selectedDeviceUUID"
 
     var standingPosition: Float {
         get {
@@ -147,9 +148,22 @@ class Preferences {
             }
             return true
         }
-        
+
         set {
             UserDefaults.standard.setValue(!newValue, forKey: hasLaunched)
+        }
+    }
+
+    var selectedDeviceUUID: String? {
+        get {
+            return UserDefaults.standard.string(forKey: selectedDeviceUUIDKey)
+        }
+        set {
+            if let uuid = newValue {
+                UserDefaults.standard.setValue(uuid, forKey: selectedDeviceUUIDKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: selectedDeviceUUIDKey)
+            }
         }
     }
 
