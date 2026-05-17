@@ -30,7 +30,6 @@ class Preferences {
 
     private let hasLaunched = "hasLaunched"
 
-    private let selectedDeviceUUIDKey = "selectedDeviceUUID"
     private let notifyInsteadOfAutoMoveKey = "notifyInsteadOfAutoMove"
 
     var standingPosition: Float {
@@ -82,19 +81,6 @@ class Preferences {
     var isFirstLaunch: Bool {
         get { !(UserDefaults.standard.object(forKey: hasLaunched) as? Bool ?? false) }
         set { UserDefaults.standard.set(!newValue, forKey: hasLaunched) }
-    }
-
-    /// UUID of the Bluetooth peripheral the user manually picked in Preferences.
-    /// When `nil`, fall back to name-based auto-discovery.
-    var selectedDeviceUUID: String? {
-        get { UserDefaults.standard.string(forKey: selectedDeviceUUIDKey) }
-        set {
-            if let uuid = newValue {
-                UserDefaults.standard.set(uuid, forKey: selectedDeviceUUIDKey)
-            } else {
-                UserDefaults.standard.removeObject(forKey: selectedDeviceUUIDKey)
-            }
-        }
     }
 
     /// When `automaticStandEnabled` is on, post a user notification at the scheduled

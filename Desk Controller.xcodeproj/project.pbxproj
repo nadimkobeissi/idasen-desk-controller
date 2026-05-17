@@ -28,10 +28,7 @@
 		7DA9470025AD3462000B4816 /* MoveDeskCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DA946FF25AD3462000B4816 /* MoveDeskCommand.swift */; };
 		81293EBE25F24047007D3663 /* AutoStand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81293EBD25F24047007D3663 /* AutoStand.swift */; };
 		A1B2C3D4E5F6A7B8C9D0E1F3 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* NotificationManager.swift */; };
-		B1B2C3D4E5F6A7B8C9D0E1F3 /* DeskPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B2C3D4E5F6A7B8C9D0E1F2 /* DeskPreset.swift */; };
-		C1B2C3D4E5F6A7B8C9D0E1F3 /* PresetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B2C3D4E5F6A7B8C9D0E1F2 /* PresetManager.swift */; };
-		D1B2C3D4E5F6A7B8C9D0E1F3 /* PresetsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B2C3D4E5F6A7B8C9D0E1F2 /* PresetsWindowController.swift */; };
-		E1B2C3D4E5F6A7B8C9D0E1F3 /* DevicePickerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B2C3D4E5F6A7B8C9D0E1F2 /* DevicePickerWindowController.swift */; };
+		F1B2C3D4E5F6A7B8C9D0E1F3 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B2C3D4E5F6A7B8C9D0E1F2 /* AboutWindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -61,10 +58,7 @@
 		7DA9470A25AD9C93000B4816 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		81293EBD25F24047007D3663 /* AutoStand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoStand.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D0E1F2 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
-		B1B2C3D4E5F6A7B8C9D0E1F2 /* DeskPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskPreset.swift; sourceTree = "<group>"; };
-		C1B2C3D4E5F6A7B8C9D0E1F2 /* PresetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetManager.swift; sourceTree = "<group>"; };
-		D1B2C3D4E5F6A7B8C9D0E1F2 /* PresetsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsWindowController.swift; sourceTree = "<group>"; };
-		E1B2C3D4E5F6A7B8C9D0E1F2 /* DevicePickerWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicePickerWindowController.swift; sourceTree = "<group>"; };
+		F1B2C3D4E5F6A7B8C9D0E1F2 /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,12 +79,8 @@
 			isa = PBXGroup;
 			children = (
 				7D03619D25AC39B80051FB71 /* Preferences.swift */,
-				B1B2C3D4E5F6A7B8C9D0E1F2 /* DeskPreset.swift */,
-				C1B2C3D4E5F6A7B8C9D0E1F2 /* PresetManager.swift */,
 				7D0361A025AC42610051FB71 /* PreferencesWindowController.swift */,
 				7D0361A125AC42610051FB71 /* PreferencesWindowController.xib */,
-				D1B2C3D4E5F6A7B8C9D0E1F2 /* PresetsWindowController.swift */,
-				E1B2C3D4E5F6A7B8C9D0E1F2 /* DevicePickerWindowController.swift */,
 			);
 			path = Preferences;
 			sourceTree = "<group>";
@@ -142,6 +132,7 @@
 				7D81871F25ABE9FF0076DC19 /* BluetoothManager.swift */,
 				81293EBD25F24047007D3663 /* AutoStand.swift */,
 				A1B2C3D4E5F6A7B8C9D0E1F2 /* NotificationManager.swift */,
+				F1B2C3D4E5F6A7B8C9D0E1F2 /* AboutWindowController.swift */,
 				7D0361A725AC42770051FB71 /* Desk control */,
 				7D93E2A325AB244500F37364 /* EventMonitor.swift */,
 				7D93E29F25AB203800F37364 /* TouchButton.swift */,
@@ -251,10 +242,7 @@
 				7D81872325ABF1500076DC19 /* Extensions.swift in Sources */,
 				81293EBE25F24047007D3663 /* AutoStand.swift in Sources */,
 				A1B2C3D4E5F6A7B8C9D0E1F3 /* NotificationManager.swift in Sources */,
-				B1B2C3D4E5F6A7B8C9D0E1F3 /* DeskPreset.swift in Sources */,
-				C1B2C3D4E5F6A7B8C9D0E1F3 /* PresetManager.swift in Sources */,
-				D1B2C3D4E5F6A7B8C9D0E1F3 /* PresetsWindowController.swift in Sources */,
-				E1B2C3D4E5F6A7B8C9D0E1F3 /* DevicePickerWindowController.swift in Sources */,
+				F1B2C3D4E5F6A7B8C9D0E1F3 /* AboutWindowController.swift in Sources */,
 				7D03619E25AC39B80051FB71 /* Preferences.swift in Sources */,
 				7D81872025ABE9FF0076DC19 /* BluetoothManager.swift in Sources */,
 				7D93E2A425AB244500F37364 /* EventMonitor.swift in Sources */,
@@ -410,7 +398,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -421,7 +409,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 2.1.1;
+				MARKETING_VERSION = 2.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.davidwilliames.Desk-Controller";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6;
@@ -437,7 +425,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -448,7 +436,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 2.1.1;
+				MARKETING_VERSION = 2.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.davidwilliames.Desk-Controller";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6;

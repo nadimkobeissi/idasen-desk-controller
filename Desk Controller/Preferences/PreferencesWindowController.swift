@@ -65,49 +65,30 @@ class PreferencesWindowController: NSWindowController {
         })
     }
 
-    /// Add the controls for the features that didn't exist when the XIB was authored
-    /// (custom presets, manual BT selection, notify-instead-of-auto-move).
+    /// Programmatically add the "Notify instead of moving automatically" toggle —
+    /// the XIB pre-dates this preference.
     private func addExtraControls() {
         guard let content = window?.contentView else { return }
 
-        let presetsButton = NSButton(title: "Manage Presets…", target: self, action: #selector(showPresets))
-        let deviceButton = NSButton(title: "Choose Bluetooth Device…", target: self, action: #selector(showDevicePicker))
         let notifyToggle = NSButton(checkboxWithTitle: "Notify instead of moving automatically",
                                     target: self, action: #selector(toggledNotifyInstead))
         notifyToggle.state = Preferences.shared.notifyInsteadOfAutoMove ? .on : .off
+        notifyToggle.translatesAutoresizingMaskIntoConstraints = false
         notifyInsteadCheckbox = notifyToggle
 
-        let stack = NSStackView(views: [presetsButton, deviceButton, notifyToggle])
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 6
-        stack.translatesAutoresizingMaskIntoConstraints = false
-
-        // Anchor to the bottom-left of the existing window, above the unit popup if it's there.
-        content.addSubview(stack)
+        content.addSubview(notifyToggle)
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
-            stack.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -12)
+            notifyToggle.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
+            notifyToggle.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -12)
         ])
 
-        // Grow the window if needed so the new controls don't overlap the existing ones.
         if let win = window {
             var frame = win.frame
-            let minHeight: CGFloat = max(frame.height, frame.height + 90)
-            if minHeight > frame.height {
-                frame.origin.y -= (minHeight - frame.height)
-                frame.size.height = minHeight
-                win.setFrame(frame, display: false)
-            }
+            let extra: CGFloat = 28
+            frame.origin.y -= extra
+            frame.size.height += extra
+            win.setFrame(frame, display: false)
         }
-    }
-
-    @objc private func showPresets() {
-        PresetsWindowController.shared.showWindow(nil)
-    }
-
-    @objc private func showDevicePicker() {
-        DevicePickerWindowController.shared.showWindow(nil)
     }
 
     @objc private func toggledNotifyInstead(_ sender: NSButton) {

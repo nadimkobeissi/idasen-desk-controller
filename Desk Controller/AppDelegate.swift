@@ -14,7 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusBarItem: NSStatusItem!
     var popover: NSPopover!
     var eventMonitor: EventMonitor?
-    var statusBarMenu: NSMenu!
+    var aboutWindow: AboutWindowController?
 
     var viewController: ViewController?
 
@@ -36,19 +36,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         UNUserNotificationCenter.current().delegate = self
         NotificationManager.shared.requestAuthorizationIfNeeded()
 
-        // Setup the right click menu — dynamic so it always reflects the current presets.
-        statusBarMenu = NSMenu(title: "Desk Controller Menu")
-        statusBarMenu.delegate = self
-        rebuildStatusBarMenu()
-
-        // Rebuild on preset changes.
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(rebuildStatusBarMenu),
-            name: .presetsDidChange,
-            object: nil
-        )
-
+        // Setup the right click menu
+        let statusBarMenu = NSMenu(title: "Desk Controller Menu")
+        statusBarMenu.addItem(withTitle: "Move to sit", action: #selector(moveToSit), keyEquivalent: "")
+        statusBarMenu.addItem(withTitle: "Move to stand", action: #selector(moveToStand), keyEquivalent: "")
+        statusBarMenu.addItem(.separator())
+        statusBarMenu.addItem(withTitle: "Preferences…", action: #selector(showPreferences), keyEquivalent: "")
+        statusBarMenu.addItem(withTitle: "About Desk Controller", action: #selector(showAbout), keyEquivalent: "")
+        statusBarMenu.addItem(.separator())
+        statusBarMenu.addItem(withTitle: "Quit", action: #selector(quit), keyEquivalent: "")
 
         // Set the status bar icon and action
         if let button = statusBarItem.button {
@@ -91,32 +87,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         viewController?.controller?.moveToPosition(.stand)
     }
 
-    @objc func movePresetClicked(_ sender: NSMenuItem) {
-        guard let id = sender.representedObject as? UUID,
-              let preset = PresetManager.shared.preset(for: id) else { return }
-        viewController?.controller?.moveToHeight(preset.heightCm)
-    }
-
-    @objc func rebuildStatusBarMenu() {
-        statusBarMenu.removeAllItems()
-
-        for preset in PresetManager.shared.presets {
-            let unit = Preferences.shared.isMetric ? "cm" : "in"
-            let displayHeight = Preferences.shared.isMetric ? preset.heightCm : preset.heightCm.convertToInches()
-            let item = NSMenuItem(
-                title: "Move to \(preset.name) (\(Int(displayHeight.rounded())) \(unit))",
-                action: #selector(movePresetClicked(_:)),
-                keyEquivalent: ""
-            )
-            item.representedObject = preset.id
-            item.target = self
-            statusBarMenu.addItem(item)
+    @objc func showAbout() {
+        if aboutWindow == nil {
+            aboutWindow = AboutWindowController()
         }
-
-        statusBarMenu.addItem(.separator())
-        statusBarMenu.addItem(withTitle: "Preferences", action: #selector(showPreferences), keyEquivalent: "")
-        statusBarMenu.addItem(.separator())
-        statusBarMenu.addItem(withTitle: "Quit", action: #selector(quit), keyEquivalent: "")
+        aboutWindow?.showWindow(nil)
     }
 
     @objc func quit() {
@@ -171,14 +146,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-}
-
-extension AppDelegate: NSMenuDelegate {
-    nonisolated func menuNeedsUpdate(_ menu: NSMenu) {
-        MainActor.assumeIsolated {
-            rebuildStatusBarMenu()
-        }
-    }
 }
 
 extension AppDelegate: UNUserNotificationCenterDelegate {

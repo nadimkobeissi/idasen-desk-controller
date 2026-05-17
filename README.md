@@ -33,10 +33,9 @@ I'm already on my Mac while sitting/standing at my desk, so why not control the 
 
 * Easy access from the Mac status bar
 * View the current desk height
-* Save **unlimited** named height presets (sit, stand, and as many custom heights as you want)
+* Save sit/stand height positions
 * Move up/down without holding the button
 * Optional **automatic** sit/stand schedule, with a toggle to send a **notification** (with Stand / Sit action buttons) instead of moving the desk automatically
-* **Manual Bluetooth device picker** for when name-based auto-discovery isn't enough
 * Calibration offset for desks that report a position that doesn't match the real world
 * Launch at login (toggleable in Preferences)
 * AppleScript support (great for an [Alfred](https://www.alfredapp.com) workflow or Shortcuts)
@@ -65,16 +64,6 @@ xattr -dr com.apple.quarantine "/Applications/Desk Controller.app"
 ```
 
 To open Preferences either right-click the status-bar icon and click `Preferences`, or click the icon and then the gear icon in the bottom right. To quit, right-click the status-bar icon and click `Quit`.
-
-
-## Custom presets
-
-Open Preferences → **Manage Presets…** to add or remove named height presets. The two built-in presets ("Sitting" and "Standing") can't be deleted but their heights are editable. Custom presets show up in the status-bar right-click menu and persist across launches.
-
-
-## Manual Bluetooth device selection
-
-By default the app auto-discovers any Bluetooth device whose name contains "desk" (case-insensitive). If you have multiple desks nearby, the wrong device gets picked, or your desk advertises under a non-default name, open Preferences → **Choose Bluetooth Device…** to pick a specific peripheral. The selection is remembered by UUID. Use **Use Auto-Discovery** in the same window to clear it.
 
 
 ## Stand reminders
