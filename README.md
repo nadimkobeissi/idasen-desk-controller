@@ -1,12 +1,15 @@
 ![App icon](/images/Icon.png)
 
-# Idåsen Desk Controller — Mac (Apple Silicon)
+# Idåsen Desk Controller – Mac app
 
-A Mac status-bar app for controlling your [IKEA IDÅSEN (Linak) sit/stand desk](https://www.ikea.com/au/en/p/idasen-desk-sit-stand-black-beige-s79280979/).
+A Mac Status Bar application for controlling your [IKEA IDÅSEN (Linak) sit/stand desk](https://www.ikea.com/au/en/p/idasen-desk-sit-stand-black-beige-s79280979/).
 
-This is a maintained fork of [DWilliames/idasen-desk-controller-mac](https://github.com/DWilliames/idasen-desk-controller-mac), modernized for Apple Silicon and current macOS, with bug fixes pulled in from several community forks.
+If you find this at least a little bit useful:
+* Star this project
+* Shout the original author a cup of coffee via [PayPal](https://paypal.me/dtw/5)
+* Follow him on Twitter [@davidwilliames](https://twitter.com/davidwilliames)
 
-[**⬇ Download the latest release**](https://github.com/marcobazzani/idasen-desk-controller-mac/releases/latest)
+[**Download the latest release**](../../releases/latest)
 
 ---
 
@@ -14,58 +17,106 @@ This is a maintained fork of [DWilliames/idasen-desk-controller-mac](https://git
 
 ![Preferences example](/images/preferences_example.png)
 
+
+## Why?
+
+The best way I've found to get myself to use my sit/stand desk more is to remove as much friction around moving it as possible.
+
+The Linak 'Desk Control' mobile app lets you set favourite positions — but then you need to open the app, and press **and hold** the up/down arrow until it gets into position. Having to hold the button the whole time was annoying, and I found myself changing height positions less.
+
+I found a couple of different solutions across GitHub, but no truly native Mac apps. So this is one.
+
+I'm already on my Mac while sitting/standing at my desk, so why not control the desk from here without needing the mobile app or the physical controller?
+
+
 ## Features
 
-- Easy access from the macOS status bar
-- View current desk height
-- Save sit/stand height presets
-- Move up/down without holding the button
-- Automatic stand reminders on an hourly schedule
-- Calibration offset for desks that report the wrong absolute height
-- Launch at login (toggleable in Preferences)
-- AppleScript support (Alfred / Shortcuts / your own scripts)
+* Easy access from the Mac status bar
+* View the current desk height
+* Save **unlimited** named height presets (sit, stand, and as many custom heights as you want)
+* Move up/down without holding the button
+* Optional **automatic** sit/stand schedule, with a toggle to send a **notification** (with Stand / Sit action buttons) instead of moving the desk automatically
+* **Manual Bluetooth device picker** for when name-based auto-discovery isn't enough
+* Calibration offset for desks that report a position that doesn't match the real world
+* Launch at login (toggleable in Preferences)
+* AppleScript support (great for an [Alfred](https://www.alfredapp.com) workflow or Shortcuts)
 
 ![Status-bar example](/images/status_bar_example.png)
 
+
 ## Requirements
 
-- **Apple Silicon Mac** (M1 or later)
-- **macOS 13 Ventura** or newer
+* Apple Silicon Mac (M1 or later)
+* macOS 13 Ventura or newer
 
-The binary is ARM64-only; Intel Macs are no longer supported. If you need an Intel build, use the [upstream 1.0.x releases](https://github.com/DWilliames/idasen-desk-controller-mac/releases).
+If you need an Intel build, the older 1.0.x releases still work on macOS 10.15+.
 
-## Install
 
-1. Download `Desk-Controller-vX.Y.Z.zip` from the [latest release](https://github.com/marcobazzani/idasen-desk-controller-mac/releases/latest).
-2. Unzip and move `Desk Controller.app` to `/Applications`.
-3. Releases are ad-hoc signed (not notarized) because there's no Apple Developer ID behind this fork. Remove the macOS quarantine attribute once:
+## Getting started
 
-   ```sh
-   xattr -dr com.apple.quarantine "/Applications/Desk Controller.app"
-   ```
+* [Download the latest release](../../releases/latest) and move `Desk Controller.app` to your `Applications` folder
+* Double-click to open it
+* It will show up in your status bar
 
-4. Launch the app. Grant Bluetooth permission when prompted.
+If the release you downloaded is unsigned (no Apple Developer ID — typical for CI-built artifacts), macOS will mark it as quarantined. Remove the quarantine attribute once:
 
-## What's new in this fork
+```sh
+xattr -dr com.apple.quarantine "/Applications/Desk Controller.app"
+```
 
-| Change | Source |
-|---|---|
-| Swift 6 / Swift Concurrency refactor, modern Sendable closures, redesigned UI | merged from [MartinRybergLaude](https://github.com/MartinRybergLaude/idasen-desk-controller-mac) |
-| Position-offset bug fix (offset applied to UI + sit/stand button state + target height) | merged from [ashumeet](https://github.com/ashumeet/idasen-controller-mac) |
-| AppleScript: `move "120cm"` / `move "55in"` / `move "80"` shortcut | merged from [akucharczyk](https://github.com/akucharczyk/idasen-controller-mac) |
-| Notifications instead of automatic movement (with Stand/Sit action buttons) | merged from [akucharczyk](https://github.com/akucharczyk/idasen-controller-mac) |
-| Better desk name detection (case-insensitive + advertisement-data match) | merged from [akucharczyk](https://github.com/akucharczyk/idasen-controller-mac) |
-| Manual Bluetooth device selection (Preferences → Choose Bluetooth Device…) | merged from [varunyellina](https://github.com/varunyellina/idasen-desk-controller-mac) |
-| Unlimited custom height presets (Preferences → Manage Presets…) + dynamic status-bar menu | merged from [anant1811](https://github.com/anant1811/idasen-desk-controller-mac) |
-| ARM64-only build, macOS 13.0 deployment target | this fork |
-| GitHub Actions CI + automated `.zip` releases on tag | this fork |
-| Replace `NSGlassEffectView` (macOS 26-only) with `NSVisualEffectView` | this fork |
+To open Preferences either right-click the status-bar icon and click `Preferences`, or click the icon and then the gear icon in the bottom right. To quit, right-click the status-bar icon and click `Quit`.
 
-> The three previously-deferred features (manual BT selection, unlimited presets, notifications + name detection) were rewritten to fit the Swift Concurrency baseline; the original commits couldn't auto-merge but the merge edges are preserved in `git log --graph`.
 
-## AppleScript
+## Custom presets
 
-Talk to the app from AppleScript (great for an [Alfred](https://www.alfredapp.com) workflow or Shortcuts):
+Open Preferences → **Manage Presets…** to add or remove named height presets. The two built-in presets ("Sitting" and "Standing") can't be deleted but their heights are editable. Custom presets show up in the status-bar right-click menu and persist across launches.
+
+
+## Manual Bluetooth device selection
+
+By default the app auto-discovers any Bluetooth device whose name contains "desk" (case-insensitive). If you have multiple desks nearby, the wrong device gets picked, or your desk advertises under a non-default name, open Preferences → **Choose Bluetooth Device…** to pick a specific peripheral. The selection is remembered by UUID. Use **Use Auto-Discovery** in the same window to clear it.
+
+
+## Stand reminders
+
+Turn on the auto-stand schedule in Preferences to be reminded once per hour. If you'd rather decide for yourself when to move, toggle **Notify instead of moving automatically** — the app will then post a macOS notification at the scheduled time with `Stand` / `Sit` action buttons that move the desk when you tap them.
+
+
+## Troubleshooting
+
+* Make sure no other phones / computers currently have one of the 'Desk Control' apps open and connected to your desk. If they do, simply quit that app and this Desk Controller app should work.
+* The auto-discovery heuristic looks for the word "desk" (case-insensitive) in the Bluetooth device name. If you renamed your desk to something that doesn't contain "desk", use the **Choose Bluetooth Device…** picker instead.
+* `"Desk Controller.app" is damaged and can't be opened` — that's macOS's quarantine flag on an unsigned/CI-built download. Run the `xattr -dr com.apple.quarantine ...` command from the "Getting started" section.
+* If it's still not finding your desk, try resetting the desk:
+    1. Lower your desk as low as it goes.
+    2. Hold the physical down button past the bottom; after a second or two it will jog down and back up.
+    3. Hold the 'bluetooth' button on the front of the physical controller for a few seconds, until the blue light starts blinking.
+
+---
+
+## Interacting with AppleScript
+
+You can talk to the app from AppleScript. Great for an [Alfred App](https://www.alfredapp.com) workflow, a Shortcut, or your own scripts.
+
+#### Commands
+
+`move "to-sit"`: Move to the saved sitting position
+
+`move "to-stand"`: Move to the saved standing position
+
+`move "up"`: Nudge the desk up a tiny bit
+
+`move "down"`: Nudge the desk down a tiny bit
+
+`move "120cm"`: Move to 120 cm (also works inside `move to "..."`)
+
+`move "55in"`: Move to 55 inches (also works inside `move to "..."`)
+
+`move "80"`: Move to 80 cm or 80 in depending on your Preferences
+
+`move to "120cm"`: Original syntax — still supported
+
+Example:
 
 ```applescript
 tell application "Desk Controller"
@@ -73,38 +124,18 @@ tell application "Desk Controller"
 end tell
 ```
 
-Commands:
-
-| Command | Effect |
-|---|---|
-| `move "to-sit"` | Move to the saved sitting position |
-| `move "to-stand"` | Move to the saved standing position |
-| `move "up"` / `move "down"` | Nudge up or down |
-| `move "120cm"` / `move "55in"` | Move to an absolute height (unit suffix) |
-| `move "80"` | Move to 80 cm or 80 in depending on your Preferences |
-| `move to "120cm"` | Same as `move "120cm"` — original syntax still works |
-
-## Troubleshooting
-
-- **App "is damaged and can't be opened"** — that's the quarantine attribute on an ad-hoc signed app. Run the `xattr -dr com.apple.quarantine ...` command from the install section.
-- **Desk isn't discovered** — only one device can talk to the desk over Bluetooth at a time. Quit Linak's mobile/desktop "Desk Control" app and reconnect.
-- **Renamed your desk?** The discovery heuristic still looks for the word "Desk" in the Bluetooth name.
-- **Hard reset the desk**:
-  1. Lower the desk all the way down.
-  2. Hold the physical down button past the bottom; the desk will jog down/up.
-  3. Hold the Bluetooth button on the physical controller for a few seconds until the LED blinks.
 
 ## Building from source
 
 ```sh
-git clone https://github.com/marcobazzani/idasen-desk-controller-mac.git
+git clone <this repository>
 cd idasen-desk-controller-mac
 open "Desk Controller.xcodeproj"
 ```
 
 Requires Xcode 16+ on an Apple Silicon Mac.
 
-CLI build matching CI:
+CLI build:
 
 ```sh
 xcodebuild -project "Desk Controller.xcodeproj" -scheme "Desk Controller" \
@@ -113,11 +144,19 @@ xcodebuild -project "Desk Controller.xcodeproj" -scheme "Desk Controller" \
   CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="" build
 ```
 
+Releases are produced automatically: pushing a `v*` tag triggers a GitHub Actions workflow that builds an ad-hoc-signed `.app`, zips it, and publishes it as a GitHub Release.
+
+
 ## Credits
 
-- Original app by [David Williames](https://github.com/DWilliames). If this is useful, send him a coffee via [PayPal](https://paypal.me/dtw/5) and follow him at [@davidwilliames](https://twitter.com/davidwilliames).
-- Auto-stand feature originally by Johan Eklund ([meck](https://github.com/meck)), upstream PR #2.
-- Modernization and fork-merge work in this repository by [@marcobazzani](https://github.com/marcobazzani).
+* Original app by [David Williames](https://github.com/DWilliames).
+* Auto-stand scheduling by Johan Eklund ([@meck](https://github.com/meck)).
+* Swift Concurrency / @MainActor modernization and UI redesign by [@MartinRybergLaude](https://github.com/MartinRybergLaude).
+* Position-offset bug fixes by [@ashumeet](https://github.com/ashumeet).
+* AppleScript improvements and notifications by [@akucharczyk](https://github.com/akucharczyk).
+* Manual Bluetooth device selection by [@varunyellina](https://github.com/varunyellina).
+* Unlimited custom presets by [@anant1811](https://github.com/anant1811).
+
 
 ## License
 
