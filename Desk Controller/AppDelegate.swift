@@ -6,7 +6,7 @@
 //
 
 import Cocoa
-import UserNotifications
+@preconcurrency import UserNotifications
 
 @main @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
