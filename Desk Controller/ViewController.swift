@@ -171,7 +171,7 @@ class ViewController: NSViewController {
     }
 
     func onDeskPositionChange(_ newPosition: Float) {
-        var convertedPosition = newPosition
+        var convertedPosition = newPosition + Preferences.shared.positionOffset
 
         if !Preferences.shared.isMetric {
             convertedPosition = convertedPosition.convertToInches()
@@ -179,8 +179,8 @@ class ViewController: NSViewController {
 
         currentPositionLabel?.stringValue = "\(Int(convertedPosition.rounded()))"
 
-        sitButton?.isEnabled = !(Preferences.shared.sittingPosition.rounded() == newPosition.rounded())
-        standButton?.isEnabled = !(Preferences.shared.standingPosition.rounded() == newPosition.rounded())
+        sitButton?.isEnabled = abs((Preferences.shared.sittingPosition - Preferences.shared.positionOffset) - newPosition) > 0.5
+        standButton?.isEnabled = abs((Preferences.shared.standingPosition - Preferences.shared.positionOffset) - newPosition) > 0.5
     }
 
     func reconnect() {

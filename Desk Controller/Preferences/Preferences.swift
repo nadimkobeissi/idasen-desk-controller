@@ -84,11 +84,11 @@ class Preferences {
     func forPosition(_ position: Position) -> Float {
         switch position {
         case .sit:
-            return sittingPosition
+            return sittingPosition - positionOffset
         case .stand:
-            return standingPosition
+            return standingPosition - positionOffset
         case .custom(let height):
-            return height
+            return height - positionOffset
         }
     }
 
