@@ -23,7 +23,13 @@ final class NotificationManager {
     private init() {}
 
     /// Ask once for authorization. Safe to call repeatedly — the system de-dupes.
-    func requestAuthorizationIfNeeded() {
+    ///
+    /// `nonisolated` so the UNUserNotificationCenter completion handler — which
+    /// runs on `com.apple.usernotifications.UNUserNotificationServiceConnection.call-out`
+    /// — doesn't inherit @MainActor isolation from the class. Inheriting it caused
+    /// the Swift runtime's `swift_task_checkIsolatedSwift` assertion to trap at
+    /// app startup on macOS 26.
+    nonisolated func requestAuthorizationIfNeeded() {
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in
             guard settings.authorizationStatus == .notDetermined else { return }
