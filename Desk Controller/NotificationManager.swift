@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import UserNotifications
+@preconcurrency import UserNotifications
 
 @MainActor
 final class NotificationManager {
@@ -24,11 +24,10 @@ final class NotificationManager {
 
     /// Ask once for authorization. Safe to call repeatedly — the system de-dupes.
     func requestAuthorizationIfNeeded() {
+        let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in
             guard settings.authorizationStatus == .notDetermined else { return }
-            Task { @MainActor in
-                _ = try? await self.center.requestAuthorization(options: [.alert, .sound])
-            }
+            center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
         }
     }
 
