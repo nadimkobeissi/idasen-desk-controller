@@ -130,7 +130,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     public static func bringToFront(window: NSWindow) {
         window.makeKeyAndOrderFront(nil)
-        NSApp.activate()
+        NSApp.activate(ignoringOtherApps: true)
     }
 
 }

@@ -69,17 +69,19 @@ class ViewController: NSViewController {
 
         preferredContentSize = NSSize(width: 260, height: 170)
 
-        // Add glass background to increase popover opacity
-        let glass = NSGlassEffectView()
-        glass.style = .regular
-        glass.tintColor = NSColor.white.withAlphaComponent(0.3)
-        glass.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(glass, positioned: .below, relativeTo: nil)
+        // Vibrant background to mimic the popover look on older macOS.
+        // NSGlassEffectView (Tahoe-only) was the original choice; this works on macOS 13+.
+        let background = NSVisualEffectView()
+        background.material = .popover
+        background.blendingMode = .behindWindow
+        background.state = .active
+        background.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(background, positioned: .below, relativeTo: nil)
         NSLayoutConstraint.activate([
-            glass.topAnchor.constraint(equalTo: view.topAnchor),
-            glass.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            glass.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            glass.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            background.topAnchor.constraint(equalTo: view.topAnchor),
+            background.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            background.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            background.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
 
         containerStackView?.isHidden = true
