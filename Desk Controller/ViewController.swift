@@ -207,7 +207,10 @@ class ViewController: NSViewController {
         } else if let position = controller.desk.position, Preferences.shared.standingPosition > position {
             controller.moveToPosition(.stand)
         } else {
-            controller.moveUp()
+            // No stand target above us — target the soft ceiling so `moveIfNeeded`
+            // keeps streaming move-up commands for as long as the button is held.
+            // The desk's firmware enforces the real upper limit.
+            controller.moveToHeight(200)
         }
     }
 
@@ -221,7 +224,10 @@ class ViewController: NSViewController {
         } else if let position = controller.desk.position, Preferences.shared.sittingPosition < position {
             controller.moveToPosition(.sit)
         } else {
-            controller.moveDown()
+            // No sit target below us — target the soft floor so `moveIfNeeded`
+            // keeps streaming move-down commands for as long as the button is held.
+            // The desk's firmware enforces the real lower limit.
+            controller.moveToHeight(0)
         }
     }
 
