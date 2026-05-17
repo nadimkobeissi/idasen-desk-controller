@@ -114,6 +114,31 @@ end tell
 ```
 
 
+## Debug logging
+
+The app has an opt-in file-based debug log for situations where something needs deeper diagnosis (BLE connection issues, button-handler timing, etc.). It's **off by default**.
+
+Enable:
+
+```sh
+defaults write com.davidwilliames.Desk-Controller debugLoggingEnabled -bool true
+```
+
+Disable:
+
+```sh
+defaults write com.davidwilliames.Desk-Controller debugLoggingEnabled -bool false
+```
+
+While enabled, the app appends to:
+
+```
+~/Library/Containers/com.davidwilliames.Desk-Controller/Data/Library/Application Support/DeskControllerDebug/debug.log
+```
+
+The toggle takes effect immediately — no app restart needed.
+
+
 ## Building from source
 
 ```sh

@@ -57,14 +57,32 @@ extension BluetoothManager: CBCentralManagerDelegate {
             centralManager = central
             onCentralManagerStateChange(central)
 
+            print("[BluetoothManager] state -> \(central.state.rawValue) (poweredOn=\(central.state == .poweredOn))")
+
             guard central.state == .poweredOn else {
                 return
             }
 
             if let peripheral = connectedPeripheral ?? pendingPeripheral, peripheral.state == .disconnected {
+                print("[BluetoothManager] reconnecting known peripheral \(peripheral.identifier)")
                 central.connect(peripheral, options: nil)
                 return
             }
+
+            // Adopt any peripheral macOS already has connected on the IDÅSEN
+            // service — these will NOT show up via scanForPeripherals because
+            // they don't advertise while held by another connection.
+            let alreadyConnected = central.retrieveConnectedPeripherals(
+                withServices: [DeskPeripheral.deskControlServiceUUID]
+            )
+            if let desk = alreadyConnected.first {
+                print("[BluetoothManager] adopting already-connected peripheral \(desk.identifier) name=\(desk.name ?? "—")")
+                pendingPeripheral = desk
+                central.connect(desk, options: nil)
+                return
+            }
+
+            print("[BluetoothManager] no already-connected desk, starting advertising scan")
             central.scanForPeripherals(withServices: nil, options: nil)
         }
     }

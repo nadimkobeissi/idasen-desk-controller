@@ -76,10 +76,12 @@ class DeskController: NSObject {
 
     func moveUp() {
         guard let characteristic = desk.controlCharacteristic else {
+            dbg("moveUp: NO controlCharacteristic")
             return
         }
 
         if let data = Data(hexString: "4700") {
+            dbg("moveUp: writing 4700 to \(characteristic.uuid.uuidString)")
             desk.peripheral.writeValue(data, for: characteristic, type: .withResponse)
             lastMoveTime = Date()
             currentMovingDirection = .up
@@ -88,10 +90,12 @@ class DeskController: NSObject {
 
     func moveDown() {
         guard let characteristic = desk.controlCharacteristic else {
+            dbg("moveDown: NO controlCharacteristic")
             return
         }
 
         if let data = Data(hexString: "4600") {
+            dbg("moveDown: writing 4600 to \(characteristic.uuid.uuidString)")
             desk.peripheral.writeValue(data, for: characteristic, type: .withResponse)
             lastMoveTime = Date()
             currentMovingDirection = .down
@@ -99,15 +103,18 @@ class DeskController: NSObject {
     }
 
     func stopMoving() {
+        dbg("stopMoving()")
         guard let characteristic = desk.controlCharacteristic else {
+            dbg("stopMoving: NO controlCharacteristic")
             return
         }
 
         if let data = Data(hexString: "FF00") {
+            dbg("stopMoving: writing FF00")
             desk.peripheral.writeValue(data, for: characteristic, type: .withResponse)
-
         }
 
+        stopHoldTimer()
         currentMovingDirection = .none
         movingToPosition = nil
         previousPosition = nil
@@ -121,12 +128,68 @@ class DeskController: NSObject {
         movingToPosition = .custom(height: height)
     }
 
+    // MARK: - Manual hold-button driver
+    //
+    // Linak desks need a `move` command resent every ~500ms to keep moving. The
+    // `moveIfNeeded` loop is normally driven by incoming position notifications,
+    // but those only fire while the desk is actually moving — chicken & egg if
+    // the first packet doesn't budge the desk for any reason. For the arrow
+    // buttons (manual hold-to-nudge) drive the resend with a timer instead so
+    // the loop never depends on the desk talking back to us.
+
+    private var holdTimer: Timer?
+
+    func startHoldingDown() {
+        startHolding(direction: .down)
+    }
+
+    func startHoldingUp() {
+        startHolding(direction: .up)
+    }
+
+    private func startHolding(direction: MovingDirection) {
+        dbg("startHolding(direction=\(direction))")
+        stopHoldTimer()
+        // Cancel any in-flight automatic target so `moveIfNeeded` (driven by
+        // position notifications) doesn't fight us by issuing stopMoving when
+        // it thinks we passed the target.
+        movingToPosition = nil
+
+        sendHoldPacket(direction: direction)
+
+        let timer = Timer(timeInterval: 0.4, repeats: true) { @Sendable [weak self] _ in
+            MainActor.assumeIsolated {
+                dbg("hold timer fired (direction=\(direction))")
+                self?.sendHoldPacket(direction: direction)
+            }
+        }
+        timer.tolerance = 0.05
+        RunLoop.main.add(timer, forMode: .common)
+        holdTimer = timer
+    }
+
+    private func sendHoldPacket(direction: MovingDirection) {
+        switch direction {
+        case .up:   moveUp()
+        case .down: moveDown()
+        case .none: break
+        }
+    }
+
+    private func stopHoldTimer() {
+        holdTimer?.invalidate()
+        holdTimer = nil
+    }
+
 
     var previousPosition: Float?
 
     private func moveIfNeeded() {
 
         guard let toPosition = movingToPosition, var position = desk.position else {
+            if movingToPosition != nil {
+                dbg("moveIfNeeded: target set but desk.position is nil")
+            }
             return
         }
 
@@ -137,6 +200,9 @@ class DeskController: NSObject {
 
 
         let positionToMoveTo = Preferences.shared.forPosition(toPosition)
+
+        let dirInt = (currentMovingDirection == .up ? 1 : (currentMovingDirection == .down ? -1 : 0))
+        dbg("moveIfNeeded: pos=\(String(format: "%.1f", position)) target=\(String(format: "%.1f", positionToMoveTo)) speed=\(String(format: "%.1f", speed)) dir=\(dirInt) tsLast=\(String(format: "%.2f", timeSinceLastMove)) distSincePrev=\(String(format: "%.2f", distanceSincePreviousPosition))")
 
 
         if positionToMoveTo > position {

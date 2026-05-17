@@ -77,20 +77,32 @@ extension DeskPeripheral: CBPeripheralDelegate {
     nonisolated func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         MainActor.assumeIsolated {
             guard error == nil, peripheral == self.peripheral, let characteristics = service.characteristics else {
+                dbg("didDiscoverCharacteristics: error=\(String(describing: error)) same=\(peripheral == self.peripheral) count=\(service.characteristics?.count ?? -1)")
                 return
             }
 
             characteristics.forEach { characteristic in
                 if characteristic.uuid == DeskPeripheral.deskPositionCharacteristicUUID {
+                    dbg("found positionCharacteristic, subscribing")
                     positionCharacteristic = characteristic
-
                     peripheral.readValue(for: characteristic)
                     peripheral.setNotifyValue(true, for: characteristic)
                 } else if characteristic.uuid == DeskPeripheral.deskControlCharacteristicUUID {
+                    dbg("found controlCharacteristic")
                     controlCharacteristic = characteristic
                 } else {
                     return
                 }
+            }
+        }
+    }
+
+    nonisolated func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        MainActor.assumeIsolated {
+            if let error {
+                dbg("didWriteValueFor \(characteristic.uuid.uuidString) ERROR: \(error.localizedDescription)")
+            } else {
+                dbg("didWriteValueFor \(characteristic.uuid.uuidString) OK")
             }
         }
     }
@@ -114,6 +126,7 @@ extension DeskPeripheral: CBPeripheralDelegate {
 
                 speed = Float(speedValue)
                 position = Float(positionValue) / 100 + DeskPeripheral.heightPositionOffset
+                dbg("position notification: raw=\(positionValue) speed=\(speedValue) → \(String(format: "%.1f", position ?? -1)) cm")
             }
         }
     }

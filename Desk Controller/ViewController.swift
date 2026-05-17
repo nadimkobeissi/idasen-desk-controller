@@ -198,40 +198,35 @@ class ViewController: NSViewController {
     }
 
     @IBAction func moveUpClicked(_ sender: TouchButton) {
-        guard let controller = controller else {
-            return
-        }
+        let pos = controller?.desk.position
+        dbg("moveUpClicked isPressed=\(sender.isPressed) controller=\(controller == nil ? "nil" : "ok") pos=\(pos.map { String(format: "%.1f", $0) } ?? "nil")")
+        guard let controller = controller else { return }
 
-        if !sender.isPressed {
-            controller.stopMoving()
-        } else if let position = controller.desk.position, Preferences.shared.standingPosition > position {
-            controller.moveToPosition(.stand)
+        // Always nudge while held — the sit/stand named buttons handle preset
+        // targeting. Auto-routing the arrows to a preset target caused single-
+        // packet "micro moves" when the desk was already within the overshoot
+        // guard's 0.5 cm window of that preset.
+        if sender.isPressed {
+            controller.startHoldingUp()
         } else {
-            // No stand target above us — target the soft ceiling so `moveIfNeeded`
-            // keeps streaming move-up commands for as long as the button is held.
-            // The desk's firmware enforces the real upper limit.
-            controller.moveToHeight(200)
+            controller.stopMoving()
         }
     }
 
     @IBAction func moveDownClicked(_ sender: TouchButton) {
-        guard let controller = controller else {
-            return
-        }
+        let pos = controller?.desk.position
+        dbg("moveDownClicked isPressed=\(sender.isPressed) controller=\(controller == nil ? "nil" : "ok") pos=\(pos.map { String(format: "%.1f", $0) } ?? "nil")")
+        guard let controller = controller else { return }
 
-        if !sender.isPressed {
-            controller.stopMoving()
-        } else if let position = controller.desk.position, Preferences.shared.sittingPosition < position {
-            controller.moveToPosition(.sit)
+        if sender.isPressed {
+            controller.startHoldingDown()
         } else {
-            // No sit target below us — target the soft floor so `moveIfNeeded`
-            // keeps streaming move-down commands for as long as the button is held.
-            // The desk's firmware enforces the real lower limit.
-            controller.moveToHeight(0)
+            controller.stopMoving()
         }
     }
 
     @IBAction func sit(_ sender: Any) {
+        dbg("sit() clicked controller=\(controller == nil ? "nil" : "ok")")
         guard let button = sitButton, let controller else {
             return
         }
@@ -245,6 +240,7 @@ class ViewController: NSViewController {
     }
 
     @IBAction func stand(_ sender: Any) {
+        dbg("stand() clicked controller=\(controller == nil ? "nil" : "ok")")
         guard let button = standButton, let controller else {
             return
         }

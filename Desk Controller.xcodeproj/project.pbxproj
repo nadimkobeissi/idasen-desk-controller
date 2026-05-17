@@ -29,6 +29,7 @@
 		81293EBE25F24047007D3663 /* AutoStand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81293EBD25F24047007D3663 /* AutoStand.swift */; };
 		A1B2C3D4E5F6A7B8C9D0E1F3 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* NotificationManager.swift */; };
 		F1B2C3D4E5F6A7B8C9D0E1F3 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B2C3D4E5F6A7B8C9D0E1F2 /* AboutWindowController.swift */; };
+		D2B2C3D4E5F6A7B8C9D0E1F3 /* DebugLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B2C3D4E5F6A7B8C9D0E1F2 /* DebugLog.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,6 +60,7 @@
 		81293EBD25F24047007D3663 /* AutoStand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoStand.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D0E1F2 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		F1B2C3D4E5F6A7B8C9D0E1F2 /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
+		D2B2C3D4E5F6A7B8C9D0E1F2 /* DebugLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLog.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,6 +135,7 @@
 				81293EBD25F24047007D3663 /* AutoStand.swift */,
 				A1B2C3D4E5F6A7B8C9D0E1F2 /* NotificationManager.swift */,
 				F1B2C3D4E5F6A7B8C9D0E1F2 /* AboutWindowController.swift */,
+				D2B2C3D4E5F6A7B8C9D0E1F2 /* DebugLog.swift */,
 				7D0361A725AC42770051FB71 /* Desk control */,
 				7D93E2A325AB244500F37364 /* EventMonitor.swift */,
 				7D93E29F25AB203800F37364 /* TouchButton.swift */,
@@ -243,6 +246,7 @@
 				81293EBE25F24047007D3663 /* AutoStand.swift in Sources */,
 				A1B2C3D4E5F6A7B8C9D0E1F3 /* NotificationManager.swift in Sources */,
 				F1B2C3D4E5F6A7B8C9D0E1F3 /* AboutWindowController.swift in Sources */,
+				D2B2C3D4E5F6A7B8C9D0E1F3 /* DebugLog.swift in Sources */,
 				7D03619E25AC39B80051FB71 /* Preferences.swift in Sources */,
 				7D81872025ABE9FF0076DC19 /* BluetoothManager.swift in Sources */,
 				7D93E2A425AB244500F37364 /* EventMonitor.swift in Sources */,
