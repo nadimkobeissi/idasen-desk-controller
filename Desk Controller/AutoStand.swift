@@ -39,8 +39,12 @@ class AutoStand: NSObject {
                 MainActor.assumeIsolated {
                     let lastEvent = CGEventSource.secondsSinceLastEventType(CGEventSourceStateID.hidSystemState, eventType: CGEventType(rawValue: ~0)!)
 
-                    if  lastEvent < Preferences.shared.automaticStandInactivity {
-                        DeskController.shared?.moveToPosition(.stand)
+                    if lastEvent < Preferences.shared.automaticStandInactivity {
+                        if Preferences.shared.notifyInsteadOfAutoMove {
+                            NotificationManager.shared.postStandReminder()
+                        } else {
+                            DeskController.shared?.moveToPosition(.stand)
+                        }
                     }
                 }
             })
@@ -48,7 +52,11 @@ class AutoStand: NSObject {
 
             downTimer = Timer.init(fire: nextDown, interval: oneHour, repeats: true, block: { @Sendable _ in
                 MainActor.assumeIsolated {
-                    DeskController.shared?.moveToPosition(.sit)
+                    if Preferences.shared.notifyInsteadOfAutoMove {
+                        NotificationManager.shared.postSitReminder()
+                    } else {
+                        DeskController.shared?.moveToPosition(.sit)
+                    }
                 }
             })
             downTimer?.tolerance = 10

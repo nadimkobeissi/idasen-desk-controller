@@ -43,22 +43,78 @@ class PreferencesWindowController: NSWindowController {
         }
     }
     
+    private var notifyInsteadCheckbox: NSButton?
+
     override func windowDidLoad() {
         super.windowDidLoad()
-        
+
         openAtLoginCheckbox.state = Preferences.shared.openAtLogin ? .on : .off
-        
+
         unitsPopUpButton.selectItem(at: Preferences.shared.isMetric ? 0 : 1)
-        
+
         autoStandEnabledCheckbox.state = Preferences.shared.automaticStandEnabled ? .on : .off
         autoStandIntervalStepper.intValue = Int32(Preferences.shared.automaticStandPerHour / 60)
         autoStandInactiveStepper.intValue = Int32(Preferences.shared.automaticStandInactivity / 60)
-        
+
+        addExtraControls()
+
         updateLabels()
-        
+
         deskController?.onPositionChange({ [weak self] position in
             self?.deskPosition = position
         })
+    }
+
+    /// Add the controls for the features that didn't exist when the XIB was authored
+    /// (custom presets, manual BT selection, notify-instead-of-auto-move).
+    private func addExtraControls() {
+        guard let content = window?.contentView else { return }
+
+        let presetsButton = NSButton(title: "Manage Presets…", target: self, action: #selector(showPresets))
+        let deviceButton = NSButton(title: "Choose Bluetooth Device…", target: self, action: #selector(showDevicePicker))
+        let notifyToggle = NSButton(checkboxWithTitle: "Notify instead of moving automatically",
+                                    target: self, action: #selector(toggledNotifyInstead))
+        notifyToggle.state = Preferences.shared.notifyInsteadOfAutoMove ? .on : .off
+        notifyInsteadCheckbox = notifyToggle
+
+        let stack = NSStackView(views: [presetsButton, deviceButton, notifyToggle])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 6
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        // Anchor to the bottom-left of the existing window, above the unit popup if it's there.
+        content.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
+            stack.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -12)
+        ])
+
+        // Grow the window if needed so the new controls don't overlap the existing ones.
+        if let win = window {
+            var frame = win.frame
+            let minHeight: CGFloat = max(frame.height, frame.height + 90)
+            if minHeight > frame.height {
+                frame.origin.y -= (minHeight - frame.height)
+                frame.size.height = minHeight
+                win.setFrame(frame, display: false)
+            }
+        }
+    }
+
+    @objc private func showPresets() {
+        PresetsWindowController.shared.showWindow(nil)
+    }
+
+    @objc private func showDevicePicker() {
+        DevicePickerWindowController.shared.showWindow(nil)
+    }
+
+    @objc private func toggledNotifyInstead(_ sender: NSButton) {
+        Preferences.shared.notifyInsteadOfAutoMove = sender.state == .on
+        if sender.state == .on {
+            NotificationManager.shared.requestAuthorizationIfNeeded()
+        }
     }
     
     override func showWindow(_ sender: Any?) {

@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import UserNotifications
 
 @main @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -13,6 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusBarItem: NSStatusItem!
     var popover: NSPopover!
     var eventMonitor: EventMonitor?
+    var statusBarMenu: NSMenu!
 
     var viewController: ViewController?
 
@@ -30,14 +32,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Don't show the icon in the Dock
         NSApp.setActivationPolicy(.accessory)
 
-        // Setup the right click menu
-        let statusBarMenu = NSMenu(title: "Desk Controller Menu")
-        statusBarMenu.addItem(withTitle: "Move to sit", action: #selector(moveToSit), keyEquivalent: "")
-        statusBarMenu.addItem(withTitle: "Move to stand", action: #selector(moveToStand), keyEquivalent: "")
-        statusBarMenu.addItem(.separator())
-        statusBarMenu.addItem(withTitle: "Preferences", action: #selector(showPreferences), keyEquivalent: "")
-        statusBarMenu.addItem(.separator())
-        statusBarMenu.addItem(withTitle: "Quit", action: #selector(quit), keyEquivalent: "")
+        // Notifications (used by AutoStand when "notify instead of auto-move" is on).
+        UNUserNotificationCenter.current().delegate = self
+        NotificationManager.shared.requestAuthorizationIfNeeded()
+
+        // Setup the right click menu — dynamic so it always reflects the current presets.
+        statusBarMenu = NSMenu(title: "Desk Controller Menu")
+        statusBarMenu.delegate = self
+        rebuildStatusBarMenu()
+
+        // Rebuild on preset changes.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(rebuildStatusBarMenu),
+            name: .presetsDidChange,
+            object: nil
+        )
 
 
         // Set the status bar icon and action
@@ -79,6 +89,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func moveToStand() {
         viewController?.controller?.moveToPosition(.stand)
+    }
+
+    @objc func movePresetClicked(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? UUID,
+              let preset = PresetManager.shared.preset(for: id) else { return }
+        viewController?.controller?.moveToHeight(preset.heightCm)
+    }
+
+    @objc func rebuildStatusBarMenu() {
+        statusBarMenu.removeAllItems()
+
+        for preset in PresetManager.shared.presets {
+            let unit = Preferences.shared.isMetric ? "cm" : "in"
+            let displayHeight = Preferences.shared.isMetric ? preset.heightCm : preset.heightCm.convertToInches()
+            let item = NSMenuItem(
+                title: "Move to \(preset.name) (\(Int(displayHeight.rounded())) \(unit))",
+                action: #selector(movePresetClicked(_:)),
+                keyEquivalent: ""
+            )
+            item.representedObject = preset.id
+            item.target = self
+            statusBarMenu.addItem(item)
+        }
+
+        statusBarMenu.addItem(.separator())
+        statusBarMenu.addItem(withTitle: "Preferences", action: #selector(showPreferences), keyEquivalent: "")
+        statusBarMenu.addItem(.separator())
+        statusBarMenu.addItem(withTitle: "Quit", action: #selector(quit), keyEquivalent: "")
     }
 
     @objc func quit() {
@@ -133,4 +171,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+}
+
+extension AppDelegate: NSMenuDelegate {
+    nonisolated func menuNeedsUpdate(_ menu: NSMenu) {
+        MainActor.assumeIsolated {
+            rebuildStatusBarMenu()
+        }
+    }
+}
+
+extension AppDelegate: UNUserNotificationCenterDelegate {
+
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                            willPresent notification: UNNotification,
+                                            withCompletionHandler completionHandler: @escaping @Sendable (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .sound])
+    }
+
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                            didReceive response: UNNotificationResponse,
+                                            withCompletionHandler completionHandler: @escaping @Sendable () -> Void) {
+        let actionID = response.actionIdentifier
+        Task { @MainActor in
+            if NotificationManager.shared.notificationActionWasStand(actionID) {
+                DeskController.shared?.moveToPosition(.stand)
+            } else if NotificationManager.shared.notificationActionWasSit(actionID) {
+                DeskController.shared?.moveToPosition(.sit)
+            }
+            completionHandler()
+        }
+    }
 }
