@@ -51,19 +51,17 @@ The binary is ARM64-only; Intel Macs are no longer supported. If you need an Int
 | Change | Source |
 |---|---|
 | Swift 6 / Swift Concurrency refactor, modern Sendable closures, redesigned UI | merged from [MartinRybergLaude](https://github.com/MartinRybergLaude/idasen-desk-controller-mac) |
-| Position-offset bug fix (offset applied to UI + sit/stand button state + target height) | ported from [ashumeet](https://github.com/ashumeet/idasen-controller-mac) |
-| AppleScript: `move "120cm"` / `move "55in"` / `move "80"` shortcut | ported from [akucharczyk](https://github.com/akucharczyk/idasen-controller-mac) |
+| Position-offset bug fix (offset applied to UI + sit/stand button state + target height) | merged from [ashumeet](https://github.com/ashumeet/idasen-controller-mac) |
+| AppleScript: `move "120cm"` / `move "55in"` / `move "80"` shortcut | merged from [akucharczyk](https://github.com/akucharczyk/idasen-controller-mac) |
+| Notifications instead of automatic movement (with Stand/Sit action buttons) | merged from [akucharczyk](https://github.com/akucharczyk/idasen-controller-mac) |
+| Better desk name detection (case-insensitive + advertisement-data match) | merged from [akucharczyk](https://github.com/akucharczyk/idasen-controller-mac) |
+| Manual Bluetooth device selection (Preferences → Choose Bluetooth Device…) | merged from [varunyellina](https://github.com/varunyellina/idasen-desk-controller-mac) |
+| Unlimited custom height presets (Preferences → Manage Presets…) + dynamic status-bar menu | merged from [anant1811](https://github.com/anant1811/idasen-desk-controller-mac) |
 | ARM64-only build, macOS 13.0 deployment target | this fork |
 | GitHub Actions CI + automated `.zip` releases on tag | this fork |
 | Replace `NSGlassEffectView` (macOS 26-only) with `NSVisualEffectView` | this fork |
 
-### Not yet merged (PRs welcome)
-
-- Manual Bluetooth device selection in Preferences ([varunyellina](https://github.com/varunyellina/idasen-desk-controller-mac))
-- Unlimited favourite presets ([anant1811](https://github.com/anant1811/idasen-desk-controller-mac))
-- Notifications + better desk name detection ([akucharczyk](https://github.com/akucharczyk/idasen-controller-mac))
-
-Both of the first two conflict structurally with the Swift Concurrency refactor and need a careful manual port onto the new `@MainActor` shape.
+> The three previously-deferred features (manual BT selection, unlimited presets, notifications + name detection) were rewritten to fit the Swift Concurrency baseline; the original commits couldn't auto-merge but the merge edges are preserved in `git log --graph`.
 
 ## AppleScript
 
