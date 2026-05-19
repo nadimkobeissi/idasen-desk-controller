@@ -70,15 +70,20 @@ class PreferencesWindowController: NSWindowController {
     private func addExtraControls() {
         guard let content = window?.contentView else { return }
 
-        let notifyToggle = NSButton(checkboxWithTitle: "Notify instead of moving automatically",
+        let notifyToggle = NSButton(checkboxWithTitle: "Notify instead of moving the desk",
                                     target: self, action: #selector(toggledNotifyInstead))
         notifyToggle.state = Preferences.shared.notifyInsteadOfAutoMove ? .on : .off
         notifyToggle.translatesAutoresizingMaskIntoConstraints = false
+        // Allow the label to wrap if the window is ever narrower than the text.
+        notifyToggle.lineBreakMode = .byWordWrapping
+        notifyToggle.cell?.wraps = true
+        notifyToggle.cell?.isScrollable = false
         notifyInsteadCheckbox = notifyToggle
 
         content.addSubview(notifyToggle)
         NSLayoutConstraint.activate([
             notifyToggle.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
+            notifyToggle.trailingAnchor.constraint(lessThanOrEqualTo: content.trailingAnchor, constant: -16),
             notifyToggle.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -12)
         ])
 
