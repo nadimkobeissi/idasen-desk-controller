@@ -54,6 +54,10 @@ class DeskController: NSObject {
         desk.onPositionChange = { [weak self] position in
             self?.moveIfNeeded()
             self?.positionChangeCallbacks.forEach { $0(position) }
+            // Phase indicator (icon + popover label) is position-based; let
+            // AutoStand reread and (de-duped) broadcast on every position
+            // update so the indicator flips when the desk crosses midpoint.
+            self?.autoStand.deskPositionChanged()
         }
 
         DeskController.shared = self
@@ -121,10 +125,18 @@ class DeskController: NSObject {
     }
 
     func moveToPosition(_ position: Position) {
+        // Clear `previousPosition` so `moveIfNeeded`'s "did the desk actually
+        // move?" guard doesn't block the FIRST packet of a fresh move. The
+        // guard exists to detect a non-responding desk during a multi-packet
+        // travel; on a brand-new target the previous position is stale (from
+        // the last move that ended) and `distSincePrev` would read as 0,
+        // causing the first move-down/up command to be silently dropped.
+        previousPosition = nil
         movingToPosition = position
     }
 
     func moveToHeight(_ height: Float) {
+        previousPosition = nil
         movingToPosition = .custom(height: height)
     }
 

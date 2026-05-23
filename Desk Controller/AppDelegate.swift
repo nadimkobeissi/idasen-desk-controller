@@ -18,6 +18,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     var viewController: ViewController?
 
+    /// Cached current phase for icon refresh de-duping.
+    private var lastIconPhase: AutoStand.Phase = .disabled
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
         statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -48,14 +51,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Set the status bar icon and action
         if let button = statusBarItem.button {
-
-            let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
-            button.image = NSImage(systemSymbolName: "arrow.up.and.down.circle", accessibilityDescription: "Desk Controller")?.withSymbolConfiguration(config)
-
+            // Seed: if auto-stand is enabled but the DeskController (and its
+            // AutoStand) hasn't booted yet, show .sitting — the cycle always
+            // opens with a sit. AutoStand's first notification will correct
+            // this if needed.
+            let initialPhase: AutoStand.Phase = Preferences.shared.automaticStandEnabled
+                ? (DeskController.shared?.autoStand.currentPhase ?? .sitting)
+                : .disabled
+            applyStatusBarIcon(phase: initialPhase)
             button.menu = statusBarMenu
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.action = #selector(AppDelegate.clickedStatusItem(_:))
         }
+
+        // Observe phase transitions broadcast by AutoStand.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(autoStandPhaseDidChange(_:)),
+            name: .autoStandPhaseChanged,
+            object: nil
+        )
+        // After sleep, NSTimer fires may have been suppressed. Pull the
+        // current phase out of AutoStand explicitly so the icon doesn't
+        // drift stale.
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(systemDidWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
 
         if let mainViewController = NSStoryboard(name: "Main", bundle: nil).instantiateController(withIdentifier: "ViewControllerId") as? ViewController {
             mainViewController.popover = popover
@@ -85,6 +109,77 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func moveToStand() {
         viewController?.controller?.moveToPosition(.stand)
+    }
+
+    // MARK: - Menubar icon
+
+    /// Compatibility shim for the Preferences checkbox path: pulls the current
+    /// phase from `AutoStand` (if any) and re-applies the icon. Auto-stand off
+    /// always renders the template (disabled) icon regardless of `AutoStand`.
+    func refreshAutoStandIcon() {
+        let phase: AutoStand.Phase
+        if !Preferences.shared.automaticStandEnabled {
+            phase = .disabled
+        } else {
+            phase = DeskController.shared?.autoStand.currentPhase ?? .sitting
+        }
+        applyStatusBarIcon(phase: phase)
+    }
+
+    @objc private func autoStandPhaseDidChange(_ note: Notification) {
+        let phase = (note.object as? AutoStand.Phase) ?? .disabled
+        applyStatusBarIcon(phase: phase)
+    }
+
+    @objc private func systemDidWake() {
+        // The phase notification may have been suppressed during sleep. Force
+        // a re-read.
+        let phase: AutoStand.Phase
+        if !Preferences.shared.automaticStandEnabled {
+            phase = .disabled
+        } else {
+            phase = DeskController.shared?.autoStand.currentPhase ?? .sitting
+        }
+        applyStatusBarIcon(phase: phase)
+    }
+
+    private func applyStatusBarIcon(phase: AutoStand.Phase) {
+        guard let button = statusBarItem?.button else { return }
+        guard phase != lastIconPhase else { return }
+        lastIconPhase = phase
+
+        let baseConfig = NSImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
+        let glyphName = "arrow.up.and.down.circle"
+
+        switch phase {
+        case .disabled:
+            // Template glyph adopts the menubar foreground colour (light/dark
+            // mode aware) when auto-stand is off.
+            let image = NSImage(systemSymbolName: glyphName,
+                                accessibilityDescription: "Desk Controller")?
+                .withSymbolConfiguration(baseConfig)
+            image?.isTemplate = true
+            button.image = image
+            button.contentTintColor = nil
+        case .sitting:
+            // Sit phase = blue.
+            let palette = baseConfig.applying(.init(paletteColors: [.systemBlue]))
+            let image = NSImage(systemSymbolName: glyphName,
+                                accessibilityDescription: "Desk Controller — sitting")?
+                .withSymbolConfiguration(palette)
+            image?.isTemplate = false
+            button.image = image
+            button.contentTintColor = nil
+        case .standing:
+            // Stand phase = green.
+            let palette = baseConfig.applying(.init(paletteColors: [.systemGreen]))
+            let image = NSImage(systemSymbolName: glyphName,
+                                accessibilityDescription: "Desk Controller — standing")?
+                .withSymbolConfiguration(palette)
+            image?.isTemplate = false
+            button.image = image
+            button.contentTintColor = nil
+        }
     }
 
     @objc func showAbout() {
