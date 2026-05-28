@@ -26,6 +26,8 @@ class PreferencesWindowController: NSWindowController {
     @IBOutlet weak var openAtLoginCheckbox: NSButton!
     
     static let sharedInstance = PreferencesWindowController(windowNibName: "PreferencesWindowController")
+    private let contentWidth: CGFloat = 300
+    private let formLabelWidth: CGFloat = 120
     
     var deskController: DeskController? {
         didSet {
@@ -57,25 +59,11 @@ class PreferencesWindowController: NSWindowController {
     
     private var notifyInsteadCheckbox: NSButton?
     private var schedulePreview: SchedulePreviewView?
-    private var standForStepper: NSStepper?
-    private var standForValueLabel: NSTextField?
-    private var standForRowLabel: NSTextField?
 
     override func windowDidLoad() {
         super.windowDidLoad()
 
-        openAtLoginCheckbox.state = Preferences.shared.openAtLogin ? .on : .off
-        doubleTapToSitStandCheckbox.state = Preferences.shared.doubleTapToSitStand ? .on : .off
-
-        unitsPopUpButton.selectItem(at: Preferences.shared.isMetric ? 0 : 1)
-
-        autoStandEnabledCheckbox.state = Preferences.shared.automaticStandEnabled ? .on : .off
-        // Repurposed: existing "Automatically stand" stepper now means
-        // "Stand every X minutes" (was "X minutes per hour").
-        autoStandIntervalStepper.intValue = Int32(Preferences.shared.standEveryMinutes)
-        autoStandInactiveStepper.intValue = Int32(Preferences.shared.automaticStandInactivity / 60)
-
-        addExtraControls()
+        rebuildContentView()
 
         updateLabels()
 
@@ -88,135 +76,148 @@ class PreferencesWindowController: NSWindowController {
         })
     }
 
-    /// Programmatically rebuild the autostand block (three rows: Stand every,
-    /// Stand for, Activity timeout) plus add the notify toggle and green
-    /// schedule preview bar. Hides the XIB autostand controls so the
-    /// programmatic stack owns that region.
-    private func addExtraControls() {
+    private func rebuildContentView() {
         guard let content = window?.contentView else { return }
+        content.subviews.forEach { $0.removeFromSuperview() }
 
-        // 1) Hide every XIB element that belongs to the autostand block —
-        //    checkbox, two existing steppers, value labels, the "Activity
-        //    timeout:" static label, and the original explainer text. We
-        //    replace them with a single programmatic stack.
-        autoStandEnabledCheckbox.isHidden = true
-        autoStandIntervalStepper.isHidden = true
-        autoStandIntervalLabel.isHidden = true
-        autoStandInactiveStepper.isHidden = true
-        autoStandInactiveLabel.isHidden = true
-        let titlesToHide: Set<String> = [
-            "Activity timeout:",
-            "Automatically raise the desk the specified number of minutes per hour if the computer is active.",
-            "The desk sits for the first interval, then stands for the second, then repeats — as long as you've been active recently."
-        ]
-        for sub in content.subviews {
-            if let tf = sub as? NSTextField, titlesToHide.contains(tf.stringValue) {
-                tf.isHidden = true
-            }
-        }
+        let standingField = makeTextField(action: #selector(changeStandingHeightField(_:)))
+        standingHeightField = standingField
 
-        // 2) Build the new programmatic stack: three rows + explainer.
-        let masterCheckbox = NSButton(checkboxWithTitle: "Automatically stand",
-                                      target: self, action: #selector(masterAutoStandToggled(_:)))
-        masterCheckbox.state = Preferences.shared.automaticStandEnabled ? .on : .off
-        masterAutoStandCheckbox = masterCheckbox
+        let sittingField = makeTextField(action: #selector(changedSittingHeightField(_:)))
+        sittingHeightField = sittingField
+
+        let unitsButton = NSPopUpButton()
+        unitsButton.addItems(withTitles: ["cm", "inches"])
+        unitsButton.target = self
+        unitsButton.action = #selector(changedUnitsPopUpButton(_:))
+        unitsButton.translatesAutoresizingMaskIntoConstraints = false
+        unitsButton.widthAnchor.constraint(equalToConstant: 120).isActive = true
+        unitsPopUpButton = unitsButton
+
+        let currentField = makeTextField(action: #selector(changedCurrentHeightField(_:)))
+        currentHeightField = currentField
+
+        let calibrationText = makeHelpText(
+            "To calibrate the correct height of the desk, measure the current distance from floor to the desktop and enter the value."
+        )
+
+        let doubleTapCheckbox = NSButton(
+            checkboxWithTitle: "Double tap handle to sit and stand",
+            target: self,
+            action: #selector(toggledDoubleTaptoSitStandCheckbox(_:))
+        )
+        doubleTapToSitStandCheckbox = doubleTapCheckbox
+
+        let doubleTapText = makeHelpText(
+            "Double tap on the desk control handle to automatically move to your sit and stand presets. Double tap up to stand and down to sit."
+        )
+
+        let autoStandCheckbox = NSButton(
+            checkboxWithTitle: "Automatically stand",
+            target: self,
+            action: #selector(toggledAutoStandCheckbox(_:))
+        )
+        autoStandEnabledCheckbox = autoStandCheckbox
+        masterAutoStandCheckbox = autoStandCheckbox
 
         let standEveryRow = makeMinutesRow(label: "Stand every:",
                                             value: Preferences.shared.standEveryMinutes,
                                             min: 1, max: 240,
-                                            action: #selector(standEveryStepperChanged(_:)),
+                                            action: #selector(changedAutoStandStepper(_:)),
                                             stepperOut: &programmaticStandEveryStepper,
                                             labelOut: &programmaticStandEveryLabel)
+        autoStandIntervalStepper = programmaticStandEveryStepper
+        autoStandIntervalLabel = programmaticStandEveryLabel
+
         let standForRow = makeMinutesRow(label: "Stand for:",
                                          value: Preferences.shared.standForMinutes,
                                          min: 5, max: 60,
-                                         action: #selector(standForStepperChanged(_:)),
+                                         action: #selector(changedStandForStepper(_:)),
                                          stepperOut: &programmaticStandForStepper,
                                          labelOut: &programmaticStandForLabel)
+
         let timeoutRow = makeMinutesRow(label: "Activity timeout:",
                                         value: Int(Preferences.shared.automaticStandInactivity / 60),
                                         min: 1, max: 60,
-                                        action: #selector(activityTimeoutStepperChanged(_:)),
+                                        action: #selector(changedAutoStandInactiveStepper(_:)),
                                         stepperOut: &programmaticActivityStepper,
                                         labelOut: &programmaticActivityLabel)
+        autoStandInactiveStepper = programmaticActivityStepper
+        autoStandInactiveLabel = programmaticActivityLabel
 
-        let explainer = NSTextField(wrappingLabelWithString:
-            "Sit for the first interval, then stand for the second, then repeat. Skipped if you've been idle longer than the activity timeout.")
-        explainer.font = .systemFont(ofSize: 10)
-        explainer.textColor = .tertiaryLabelColor
-        explainer.maximumNumberOfLines = 0
-        explainer.preferredMaxLayoutWidth = 220
-
-        // The XIB "Open Desk Controller at login" stays hidden — we own its
-        // replacement programmatically so we control its position.
-        openAtLoginCheckbox.isHidden = true
-        let loginCheckbox = NSButton(checkboxWithTitle: "Open Desk Controller at login",
-                                     target: self, action: #selector(toggledOpenAtLoginInline(_:)))
-        loginCheckbox.state = Preferences.shared.openAtLogin ? .on : .off
-        loginCheckbox.translatesAutoresizingMaskIntoConstraints = false
-
-        // Autostand block — master toggle, the three rows, and the explainer
-        // text. NO "Open at login" inside this block; it lives separately at
-        // the bottom of the window.
-        let block = NSStackView(views: [
-            masterCheckbox,
-            standEveryRow,
-            standForRow,
-            timeoutRow,
-            explainer
-        ])
-        block.orientation = .vertical
-        block.alignment = .leading
-        block.spacing = 6
-        block.translatesAutoresizingMaskIntoConstraints = false
-
-        // Notify checkbox + preview bar + login checkbox live at the bottom,
-        // pinned to the content-view bottom.
-        let notifyToggle = NSButton(checkboxWithTitle: "Notify instead of moving the desk",
-                                    target: self, action: #selector(toggledNotifyInstead))
-        notifyToggle.state = Preferences.shared.notifyInsteadOfAutoMove ? .on : .off
-        notifyToggle.translatesAutoresizingMaskIntoConstraints = false
-        notifyToggle.lineBreakMode = .byWordWrapping
-        notifyToggle.cell?.wraps = true
-        notifyToggle.cell?.isScrollable = false
-        notifyInsteadCheckbox = notifyToggle
+        let autoStandText = makeHelpText(
+            "Sit for the first interval, then stand for the second, then repeat. Skipped if you've been idle longer than the activity timeout."
+        )
 
         let preview = SchedulePreviewView(frame: .zero)
         preview.translatesAutoresizingMaskIntoConstraints = false
+        preview.widthAnchor.constraint(equalToConstant: 210).isActive = true
+        preview.heightAnchor.constraint(equalToConstant: 8).isActive = true
         schedulePreview = preview
 
-        content.addSubview(block)
-        content.addSubview(preview)
-        content.addSubview(loginCheckbox)
-        content.addSubview(notifyToggle)
-
-        // Bottom stack (top→bottom): preview bar, Open at login, Notify.
+        let previewContainer = NSView()
+        previewContainer.translatesAutoresizingMaskIntoConstraints = false
+        previewContainer.addSubview(preview)
         NSLayoutConstraint.activate([
-            block.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
-            block.trailingAnchor.constraint(lessThanOrEqualTo: content.trailingAnchor, constant: -16),
-            block.topAnchor.constraint(equalTo: content.topAnchor, constant: 230),
-            block.bottomAnchor.constraint(lessThanOrEqualTo: preview.topAnchor, constant: -12),
+            previewContainer.widthAnchor.constraint(equalToConstant: contentWidth - 36),
+            previewContainer.heightAnchor.constraint(equalToConstant: 12),
+            preview.centerXAnchor.constraint(equalTo: previewContainer.centerXAnchor),
+            preview.centerYAnchor.constraint(equalTo: previewContainer.centerYAnchor)
+        ])
 
-            preview.centerXAnchor.constraint(equalTo: content.centerXAnchor),
-            preview.bottomAnchor.constraint(equalTo: loginCheckbox.topAnchor, constant: -10),
-            preview.widthAnchor.constraint(equalToConstant: 180),
-            preview.heightAnchor.constraint(equalToConstant: 8),
+        let loginCheckbox = NSButton(
+            checkboxWithTitle: "Open Desk Controller at login",
+            target: self,
+            action: #selector(toggledOpenAtLoginCheckbox(_:))
+        )
+        openAtLoginCheckbox = loginCheckbox
 
-            loginCheckbox.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
-            loginCheckbox.trailingAnchor.constraint(lessThanOrEqualTo: content.trailingAnchor, constant: -16),
-            loginCheckbox.bottomAnchor.constraint(equalTo: notifyToggle.topAnchor, constant: -6),
+        let notifyToggle = NSButton(
+            checkboxWithTitle: "Notify instead of moving the desk",
+            target: self,
+            action: #selector(toggledNotifyInstead(_:))
+        )
+        notifyInsteadCheckbox = notifyToggle
 
-            notifyToggle.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
-            notifyToggle.trailingAnchor.constraint(lessThanOrEqualTo: content.trailingAnchor, constant: -16),
-            notifyToggle.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -12)
+        let stack = NSStackView(views: [
+            makeFormRow(label: "Standing height:", control: standingField),
+            makeFormRow(label: "Sitting height:", control: sittingField),
+            makeFormRow(label: "Units:", control: unitsButton),
+            makeFormRow(label: "Current height:", control: currentField),
+            calibrationText,
+            makeSeparator(),
+            doubleTapCheckbox,
+            doubleTapText,
+            makeSeparator(),
+            autoStandCheckbox,
+            standEveryRow,
+            standForRow,
+            timeoutRow,
+            autoStandText,
+            previewContainer,
+            makeSeparator(),
+            loginCheckbox,
+            notifyToggle
+        ])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            content.widthAnchor.constraint(equalToConstant: contentWidth),
+            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 18),
+            stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -18),
+            stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 18),
+            stack.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -18)
         ])
 
         if let win = window {
-            var frame = win.frame
-            let extra: CGFloat = 28 /* notify */ + 8 /* preview */ + 60 /* extra row */ + 24 /* gaps */
-            frame.origin.y -= extra
-            frame.size.height += extra
-            win.setFrame(frame, display: false)
+            content.layoutSubtreeIfNeeded()
+            let fittingSize = stack.fittingSize
+            win.setContentSize(NSSize(width: contentWidth, height: fittingSize.height + 36))
+            win.minSize = NSSize(width: contentWidth, height: fittingSize.height + 36)
         }
     }
 
@@ -230,6 +231,47 @@ class PreferencesWindowController: NSWindowController {
     private var programmaticActivityStepper: NSStepper?
     private var programmaticActivityLabel: NSTextField?
 
+    private func makeTextField(action: Selector) -> NSTextField {
+        let field = NSTextField()
+        field.target = self
+        field.action = action
+        field.translatesAutoresizingMaskIntoConstraints = false
+        field.widthAnchor.constraint(equalToConstant: 118).isActive = true
+        return field
+    }
+
+    private func makeFormRow(label: String, control: NSView) -> NSView {
+        let title = NSTextField(labelWithString: label)
+        title.alignment = .right
+        title.translatesAutoresizingMaskIntoConstraints = false
+        title.widthAnchor.constraint(equalToConstant: formLabelWidth).isActive = true
+
+        let row = NSStackView(views: [title, control])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 10
+        return row
+    }
+
+    private func makeHelpText(_ text: String) -> NSTextField {
+        let label = NSTextField(wrappingLabelWithString: text)
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .tertiaryLabelColor
+        label.maximumNumberOfLines = 0
+        label.preferredMaxLayoutWidth = contentWidth - 36
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.widthAnchor.constraint(equalToConstant: contentWidth - 36).isActive = true
+        return label
+    }
+
+    private func makeSeparator() -> NSBox {
+        let separator = NSBox()
+        separator.boxType = .separator
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        separator.widthAnchor.constraint(equalToConstant: contentWidth - 36).isActive = true
+        return separator
+    }
+
     private func makeMinutesRow(label: String, value: Int, min: Double, max: Double,
                                  action: Selector,
                                  stepperOut: inout NSStepper?,
@@ -239,7 +281,7 @@ class PreferencesWindowController: NSWindowController {
         let title = NSTextField(labelWithString: label)
         title.alignment = .right
         title.translatesAutoresizingMaskIntoConstraints = false
-        title.widthAnchor.constraint(equalToConstant: 120).isActive = true
+        title.widthAnchor.constraint(equalToConstant: formLabelWidth).isActive = true
 
         let valueLabel = NSTextField(labelWithString: String(value))
         valueLabel.alignment = .right
@@ -263,33 +305,9 @@ class PreferencesWindowController: NSWindowController {
 
         let row = NSStackView(views: [title, valueLabel, stepper, unit])
         row.orientation = .horizontal
+        row.alignment = .centerY
         row.spacing = 4
         return row
-    }
-
-    @objc private func masterAutoStandToggled(_ sender: NSButton) {
-        Preferences.shared.automaticStandEnabled = sender.state == .on
-        updateLabels()
-        (NSApp.delegate as? AppDelegate)?.refreshAutoStandIcon()
-    }
-
-    @objc private func standEveryStepperChanged(_ sender: NSStepper) {
-        Preferences.shared.standEveryMinutes = Int(sender.intValue)
-        updateLabels()
-    }
-
-    @objc private func standForStepperChanged(_ sender: NSStepper) {
-        Preferences.shared.standForMinutes = Int(sender.intValue)
-        updateLabels()
-    }
-
-    @objc private func activityTimeoutStepperChanged(_ sender: NSStepper) {
-        Preferences.shared.automaticStandInactivity = Double(sender.intValue) * 60
-        updateLabels()
-    }
-
-    @objc private func toggledOpenAtLoginInline(_ sender: NSButton) {
-        Preferences.shared.openAtLogin = sender.state == .on
     }
 
     private func refreshSchedulePreview() {
@@ -340,9 +358,14 @@ class PreferencesWindowController: NSWindowController {
         
         standingHeightField.stringValue = String(format: "%.1f", standingPosition)
         sittingHeightField.stringValue = String(format: "%.1f", sittingPosition)
+        unitsPopUpButton.selectItem(at: Preferences.shared.isMetric ? 0 : 1)
+        openAtLoginCheckbox.state = Preferences.shared.openAtLogin ? .on : .off
+        doubleTapToSitStandCheckbox.state = Preferences.shared.doubleTapToSitStand ? .on : .off
+        notifyInsteadCheckbox?.state = Preferences.shared.notifyInsteadOfAutoMove ? .on : .off
         
         // Programmatic autostand controls
         let autoEnabled = Preferences.shared.automaticStandEnabled
+        autoStandEnabledCheckbox.state = autoEnabled ? .on : .off
         masterAutoStandCheckbox?.state = autoEnabled ? .on : .off
         programmaticStandEveryLabel?.stringValue = String(Preferences.shared.standEveryMinutes)
         programmaticStandEveryStepper?.intValue = Int32(Preferences.shared.standEveryMinutes)
@@ -417,12 +440,12 @@ class PreferencesWindowController: NSWindowController {
     }
 
     @IBAction func changedAutoStandStepper(_ sender: NSStepper) {
-        Preferences.shared.standEveryMinutes = Int(autoStandIntervalStepper.intValue)
+        Preferences.shared.standEveryMinutes = Int(sender.intValue)
         updateLabels()
     }
     
     @IBAction func changedAutoStandInactiveStepper(_ sender: NSStepper) {
-        let newInactive = Double(autoStandInactiveStepper.intValue)
+        let newInactive = Double(sender.intValue)
         Preferences.shared.automaticStandInactivity = newInactive * 60
         updateLabels()
     }

@@ -18,8 +18,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     var viewController: ViewController?
 
-    /// Cached current phase for icon refresh de-duping.
-    private var lastIconPhase: AutoStand.Phase = .disabled
+    /// Cached current phase for icon refresh de-duping. Nil forces first draw.
+    private var lastIconPhase: AutoStand.Phase?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
@@ -155,31 +155,53 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case .disabled:
             // Template glyph adopts the menubar foreground colour (light/dark
             // mode aware) when auto-stand is off.
-            let image = NSImage(systemSymbolName: glyphName,
-                                accessibilityDescription: "Desk Controller")?
-                .withSymbolConfiguration(baseConfig)
+            let image = configuredStatusImage(
+                symbolName: glyphName,
+                accessibilityDescription: "Desk Controller",
+                configuration: baseConfig
+            )
             image?.isTemplate = true
             button.image = image
             button.contentTintColor = nil
         case .sitting:
             // Sit phase = blue.
             let palette = baseConfig.applying(.init(paletteColors: [.systemBlue]))
-            let image = NSImage(systemSymbolName: glyphName,
-                                accessibilityDescription: "Desk Controller — sitting")?
-                .withSymbolConfiguration(palette)
+            let image = configuredStatusImage(
+                symbolName: glyphName,
+                accessibilityDescription: "Desk Controller — sitting",
+                configuration: palette
+            )
             image?.isTemplate = false
             button.image = image
             button.contentTintColor = nil
         case .standing:
             // Stand phase = green.
             let palette = baseConfig.applying(.init(paletteColors: [.systemGreen]))
-            let image = NSImage(systemSymbolName: glyphName,
-                                accessibilityDescription: "Desk Controller — standing")?
-                .withSymbolConfiguration(palette)
+            let image = configuredStatusImage(
+                symbolName: glyphName,
+                accessibilityDescription: "Desk Controller — standing",
+                configuration: palette
+            )
             image?.isTemplate = false
             button.image = image
             button.contentTintColor = nil
         }
+    }
+
+    private func configuredStatusImage(
+        symbolName: String,
+        accessibilityDescription: String,
+        configuration: NSImage.SymbolConfiguration
+    ) -> NSImage? {
+        if let symbol = NSImage(systemSymbolName: symbolName,
+                                accessibilityDescription: accessibilityDescription)?
+            .withSymbolConfiguration(configuration) {
+            return symbol
+        }
+
+        let fallback = NSImage(named: "StatusBarButtonImage")
+        fallback?.accessibilityDescription = accessibilityDescription
+        return fallback
     }
 
     @objc func showAbout() {
