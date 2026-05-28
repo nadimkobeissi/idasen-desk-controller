@@ -37,4 +37,13 @@ jobs:
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="" \
+            MARKETING_VERSION="${{ github.sha }}" \
             build
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Desk-Controller-macos-arm64
+          path: "build/Build/Products/Release/Desk Controller.app"
+          archive: false
+          if-no-files-found: error
