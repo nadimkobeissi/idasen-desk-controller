@@ -33,6 +33,8 @@ class Preferences {
 
     private let isMetricKey = "isMetric"
 
+    private let doubleTapToSitStandKey = "doubleTapToSitStandKey"
+
     private let hasLaunched = "hasLaunched"
 
     private let notifyInsteadOfAutoMoveKey = "notifyInsteadOfAutoMove"
@@ -120,6 +122,11 @@ class Preferences {
     var openAtLogin: Bool {
         get { LaunchAtLogin.isEnabled }
         set { LaunchAtLogin.isEnabled = newValue }
+    }
+
+    var doubleTapToSitStand: Bool {
+        get { UserDefaults.standard.bool(forKey: doubleTapToSitStandKey) }
+        set { UserDefaults.standard.setValue(newValue, forKey: doubleTapToSitStandKey) }
     }
 
     var isFirstLaunch: Bool {

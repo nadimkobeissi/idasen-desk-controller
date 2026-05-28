@@ -713,6 +713,22 @@ class ViewController: NSViewController {
             self?.onDeskPositionChange(deskPosition)
         })
 
+        controller?.onDoubleTapDetected = { [weak self] direction in
+            guard Preferences.shared.doubleTapToSitStand else {
+                return
+            }
+
+            DispatchQueue.main.async {
+                if direction == .up {
+                    self?.stand()
+                }
+
+                if direction == .down {
+                    self?.sit()
+                }
+            }
+        }
+
         controller?.onCurrentMovingDirectionChange = { [weak self] movingDirection in
             if movingDirection == .none {
                 self?.sitButton?.title = "Move to sit"
@@ -789,6 +805,11 @@ class ViewController: NSViewController {
         }
     }
 
+    private func sit() {
+        controller?.stopMoving()
+        controller?.moveToPosition(.sit)
+    }
+
     @IBAction func stand(_ sender: Any) {
         dbg("stand() clicked controller=\(controller == nil ? "nil" : "ok")")
         guard let button = standButton, let controller else {
@@ -801,6 +822,11 @@ class ViewController: NSViewController {
             button.title = stopLabelString
             controller.moveToPosition(.stand)
         }
+    }
+
+    private func stand() {
+        controller?.stopMoving()
+        controller?.moveToPosition(.stand)
     }
 
     @IBAction func showPreferences(_ sender: Any) {
