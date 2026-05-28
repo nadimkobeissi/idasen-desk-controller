@@ -165,6 +165,8 @@ class SwitchControlCommandQueue {
     private var commands: [SwitchControlCommand] = []
 
     func addCommand(command: SwitchControlCommand) -> Bool {
+        commands.removeAll { command.time.timeIntervalSince($0.time) > 1 }
+
         guard command.direction != self.commands.last?.direction else {
             return false
         }
@@ -178,10 +180,6 @@ class SwitchControlCommandQueue {
         }
 
         self.commands.append(command)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            self.commands.removeAll()
-        }
 
         return true
     }
