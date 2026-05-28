@@ -40,10 +40,22 @@ jobs:
             MARKETING_VERSION="${{ github.sha }}" \
             build
 
+      - name: Stage and zip the .app
+        id: pkg
+        run: |
+          APP_SRC="build/Build/Products/Release/Desk Controller.app"
+          test -d "$APP_SRC" || (echo "App bundle missing"; exit 1)
+          STAGE="dist"
+          mkdir -p "$STAGE"
+          cp -R "$APP_SRC" "$STAGE/"
+          cd "$STAGE"
+          /usr/bin/ditto -c -k --sequesterRsrc --keepParent "Desk Controller.app" "Desk-Controller-${{ github.sha }}.zip"
+          echo "zip=$STAGE/Desk-Controller-${{ github.sha }}.zip" >> "$GITHUB_OUTPUT"
+
       - name: Upload app artifact
         uses: actions/upload-artifact@v7
         with:
           name: Desk-Controller-macos-arm64
-          path: "build/Build/Products/Release/Desk Controller.app"
+          path: ${{ steps.pkg.outputs.zip }}
           archive: false
           if-no-files-found: error
