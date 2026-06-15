@@ -16,6 +16,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var eventMonitor: EventMonitor?
     var aboutWindow: AboutWindowController?
 
+    /// Right-click menu for the status item. Kept here and popped up manually on
+    /// right-click rather than assigned to `button.menu`: assigning the button's
+    /// menu makes AppKit show it on *any* click and swallows the left-click
+    /// popover toggle.
+    private var statusBarMenu: NSMenu!
+
     var viewController: ViewController?
 
     /// Cached current phase for icon refresh de-duping. Nil forces first draw.
@@ -40,7 +46,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationManager.shared.requestAuthorizationIfNeeded()
 
         // Setup the right click menu
-        let statusBarMenu = NSMenu(title: "Desk Controller Menu")
+        statusBarMenu = NSMenu(title: "Desk Controller Menu")
         statusBarMenu.addItem(withTitle: "Move to sit", action: #selector(moveToSit), keyEquivalent: "")
         statusBarMenu.addItem(withTitle: "Move to stand", action: #selector(moveToStand), keyEquivalent: "")
         statusBarMenu.addItem(.separator())
@@ -59,7 +65,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 ? (DeskController.shared?.autoStand.currentPhase ?? .sitting)
                 : .disabled
             applyStatusBarIcon(phase: initialPhase)
-            button.menu = statusBarMenu
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.action = #selector(AppDelegate.clickedStatusItem(_:))
         }
@@ -94,7 +99,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
-        eventMonitor?.start()
     }
 
     @objc func showPreferences() {
@@ -225,8 +229,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if event.type == .rightMouseUp {
-            if let button = statusBarItem.button, let menu = button.menu {
-                menu.popUp(positioning: nil, at: CGPoint(x: -15, y: button.bounds.maxY + 6), in: button)
+            if let button = statusBarItem.button {
+                statusBarMenu.popUp(positioning: nil, at: CGPoint(x: -15, y: button.bounds.maxY + 6), in: button)
             }
         } else {
             togglePopover(sender)

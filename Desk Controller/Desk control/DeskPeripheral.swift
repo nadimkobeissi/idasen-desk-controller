@@ -111,7 +111,7 @@ extension DeskPeripheral: CBPeripheralDelegate {
 
     nonisolated func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         MainActor.assumeIsolated {
-            if characteristic == positionCharacteristic, let value = characteristic.value, error == nil {
+            if characteristic == positionCharacteristic, let value = characteristic.value, value.count >= 4, error == nil {
 
                 hasLoadedPositionCharacteristicValues = true
 
@@ -150,6 +150,7 @@ extension DeskPeripheral: CBPeripheralDelegate {
 
         if (self.switchControlCommandQueue.addCommand(command: SwitchControlCommand(direction: direction))) {
             if let doubleTapDirection = self.switchControlCommandQueue.detectDoubleTap() {
+                self.switchControlCommandQueue.reset()
                 self.onDoubleTapDetected?(doubleTapDirection)
             }
         }
@@ -198,5 +199,12 @@ class SwitchControlCommandQueue {
         } else {
             return nil
         }
+    }
+
+    /// Clear the queue once a gesture has been consumed, so the next double-tap
+    /// is detected from a clean slate. Without this a stale `[dir, none, dir]`
+    /// can block a rapid second same-direction double-tap.
+    func reset() {
+        self.commands.removeAll()
     }
 }

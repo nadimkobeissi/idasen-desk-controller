@@ -44,8 +44,12 @@ class AutoStand: NSObject {
             // on the first position notification anyway.
             return .sitting
         }
-        let sit = Preferences.shared.sittingPosition
-        let stand = Preferences.shared.standingPosition
+        // Presets are in calibrated coordinates; `position` is raw. Convert the
+        // presets to raw (subtract the calibration offset) before comparing —
+        // the same way `Preferences.forPosition` derives raw move targets.
+        let offset = Preferences.shared.positionOffset
+        let sit = Preferences.shared.sittingPosition - offset
+        let stand = Preferences.shared.standingPosition - offset
         let midpoint = (sit + stand) / 2
         return position < midpoint ? .sitting : .standing
     }

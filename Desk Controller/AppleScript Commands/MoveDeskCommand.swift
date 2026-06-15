@@ -26,16 +26,7 @@ class MoveDeskCommand: NSScriptCommand {
             case "down":
                 DeskController.shared?.moveDown()
             default:
-                var height: Float?
-                if parameter.hasSuffix("cm") {
-                    height = Float(parameter.dropLast(2))
-                } else if parameter.hasSuffix("in") {
-                    height = Float(parameter.dropLast(2))?.convertToCentimeters()
-                } else if let value = Float(parameter) {
-                    height = Preferences.shared.isMetric ? value : value.convertToCentimeters()
-                }
-
-                if let height = height {
+                if let height = Preferences.shared.parseHeightToCentimeters(parameter) {
                     DeskController.shared?.moveToHeight(height)
                 }
             }

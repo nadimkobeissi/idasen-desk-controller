@@ -155,6 +155,19 @@ class Preferences {
         }
     }
 
+    /// Parse a height string — "120cm", "60in", or a bare number interpreted in
+    /// the user's current unit — into centimeters. Returns nil if unparseable.
+    func parseHeightToCentimeters(_ string: String) -> Float? {
+        if string.hasSuffix("cm") {
+            return Float(string.dropLast(2))
+        } else if string.hasSuffix("in") {
+            return Float(string.dropLast(2))?.convertToCentimeters()
+        } else if let value = Float(string) {
+            return isMetric ? value : value.convertToCentimeters()
+        }
+        return nil
+    }
+
     var measurementMetric: Unit {
         return isMetric ? UnitLength.centimeters : UnitLength.inches
     }

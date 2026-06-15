@@ -77,6 +77,18 @@ class DeskController: NSObject {
         BluetoothManager.shared.reconnect()
     }
 
+    /// Detach this controller from global resources before it's replaced.
+    /// Without this, a previous controller's AutoStand timers (added to
+    /// `RunLoop.main`) keep firing against `DeskController.shared` after a
+    /// reconnect, and its wake observer stays registered — both leak and cause
+    /// duplicate auto sit/stand moves.
+    func teardown() {
+        stopHoldTimer()
+        autoStand.unschedule()
+        NSWorkspace.shared.notificationCenter.removeObserver(
+            self, name: NSWorkspace.didWakeNotification, object: nil)
+    }
+
 
     func onPositionChange(_ callback: @escaping (Float) -> Void) {
         positionChangeCallbacks.append(callback)

@@ -706,6 +706,10 @@ class ViewController: NSViewController {
     }
 
     func setControllerFor(deskPeripheral: CBPeripheral) {
+        // Tear down the previous controller first so its AutoStand timers and
+        // wake observer don't leak or keep firing against the new controller.
+        controller?.teardown()
+
         let desk = DeskPeripheral(peripheral: deskPeripheral)
 
         controller = DeskController(desk: desk)

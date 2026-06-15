@@ -107,7 +107,9 @@ extension BluetoothManager: CBCentralManagerDelegate {
             }
             guard looksLikeDesk else { return }
 
-            let isClosestMatchingPeripheral = (connectPeripheralRSSI != nil && rssi < connectPeripheralRSSI!.intValue)
+            // RSSI is negative dBm; a higher (less negative) value is a
+            // stronger/closer signal, so the closest desk has the greatest RSSI.
+            let isClosestMatchingPeripheral = (connectPeripheralRSSI != nil && rssi > connectPeripheralRSSI!.intValue)
 
             if pendingPeripheral == nil || isClosestMatchingPeripheral {
                 central.connect(peripheral, options: nil)
@@ -145,6 +147,14 @@ extension BluetoothManager: CBCentralManagerDelegate {
             connectPeripheralRSSI = nil
 
             onConnectedPeripheralChange(nil)
+
+            // Re-arm: ask CoreBluetooth to reconnect to this desk as soon as it
+            // advertises again. We stopped scanning on first connect, so without
+            // this the desk stays disconnected until a Bluetooth power-cycle or
+            // app relaunch whenever it drops BLE while idle.
+            guard central.state == .poweredOn else { return }
+            pendingPeripheral = peripheral
+            central.connect(peripheral, options: nil)
         }
     }
 
